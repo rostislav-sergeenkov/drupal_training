@@ -1,0 +1,36 @@
+# Ignore project files created by IDE (PhpStorm, Eclipse PDT)
+.idea
+.project
+
+#Ignore SASS/Compass cache files
+.sass-cache
+*.css.map
+
+# Ignore paths that contain user-generated content.
+docroot/sites/*/files
+docroot/sites/*/files-private
+
+# Ignore local settings
+settings.*.php
+
+# ignore publisher sites
+install/
+update/
+/vendor/
+/rb-vendor/
+# ignore composer.phar b/c it's automatically fetched and sorta large
+/bin/composer.phar
+# ignore drush b/c we can re-grab it on demand
+/bin/drush
+/acquia-credentials.yml
+/artifacts/
+/logs/
+
+# Ignore local test scripts
+docroot/test.php
+
+# Ignore system generated files
+*.DS_Store
+
+# Ignore logs
+*.log
