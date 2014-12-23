@@ -1,4 +1,0 @@
-name = Training
-description = Developer Module that assists with code review and version upgrade
-package = Training
-core = 7.x
