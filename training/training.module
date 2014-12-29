@@ -130,7 +130,35 @@ function training_menu(){
     'access arguments' => array('train', ),
     'file' => 'training.pages.inc',
   );
-
+  $menu['training/theme'] = array(
+    'title' => 'Training Theme',
+    'description' => 'This page is Training Theme page',
+    'page callback' => 'training_theme_html',
+    'access callback' => TRUE,
+    'file' => 'training.pages.inc',
+    'expanded' => true,
+  );
+  $menu['training/theme/table'] = array(
+    'title' => 'Table Theme',
+    'description' => 'This page is Table Theme page',
+    'page callback' => 'training_theme_table',
+    'access callback' => TRUE,
+    'file' => 'training.pages.inc',
+  );
+  $menu['training/theme/image'] = array(
+    'title' => 'Image Theme',
+    'description' => 'This page is Image Theme page',
+    'page callback' => 'training_image_callback',
+    'access callback' => TRUE,
+    'file' => 'training.pages.inc',
+  );
+  $menu['training/theme/access'] = array(
+    'title' => 'Access Theme',
+    'description' => 'This page is Access Theme page',
+    'page callback' => 'training_access_callback',
+    'access callback' => TRUE,
+    'file' => 'training.pages.inc',
+  );
   return $menu;
 }
 
@@ -195,7 +223,33 @@ function training_menu_title_callback(){
       'title' => 'Access protected menu example',
       'description' => 'Use this to control access to page Permissioned Menu Item of training module',
     ),
+    'train_theme' => array(
+      'title' => 'Access protected content',
+      'description' => 'Use this to control access to page Access Theme of training module',
+    ),
   );
 
   return $permission;
 }
+
+/**
+ * Implements hook_theme
+ * @return array
+ */
+/*function training_theme(){
+  $theme = array();
+  $theme['training_render_function'] = array(
+    'variables' => array(
+      'type' => 'strong',
+      'val' => 'hh',
+    ),
+    'template' => 'templates/training_template'
+  );
+  return $theme;
+}*/
+
+/*function theme_training_render_function($variables){
+  $type = $variables['type'];
+  $val = $variables['val'];
+  return $type . '::' . $val;
+}*/
