@@ -1,4 +1,13 @@
 <?php
+/**
+ * Page callback function
+ * Rendering page for form example
+ * @param $arg
+ * @return array|mixed
+ */
+function training_example_form_callback($arg){
+  return drupal_get_form($arg);
+}
 
 /**
  * Page callback function

