@@ -1,10 +1,13 @@
 <?php
+/**
+ * @file
+ * Module file for training module.
+ */
 
 /**
- * Implements hook_menu
- * @return array
+ * Implements hook_menu().
  */
-function training_menu(){
+function training_menu() {
   $menu = array();
   $menu['training/menu'] = array(
     'title' => 'Training Landing Page',
@@ -26,7 +29,7 @@ function training_menu(){
     'title' => 'Permissioned Menu Item',
     'description' => 'This page is accessible to permissioned users only',
     'page callback' => 'training_page_html',
-    'access arguments' => array('train', ),
+    'access arguments' => array('train'),
     'file' => 'training.pages.inc',
   );
   $menu['training/menu/callback'] = array(
@@ -36,7 +39,6 @@ function training_menu(){
     'file' => 'training.pages.inc',
     'type' => MENU_CALLBACK,
   );
-
   $menu['training/menu/tabs'] = array(
     'title' => 'Tabs Pages',
     'page callback' => 'training_menu_tabs_default',
@@ -53,7 +55,7 @@ function training_menu(){
   $menu['training/menu/tabs/second'] = array(
     'title' => 'Second',
     'page callback' => 'training_menu_tabs',
-    'page arguments' => array(3, ),
+    'page arguments' => array(3),
     'access callback' => TRUE,
     'file' => 'training.pages.inc',
     'weight' => 0,
@@ -62,7 +64,7 @@ function training_menu(){
   $menu['training/menu/tabs/third'] = array(
     'title' => 'Third',
     'page callback' => 'training_menu_tabs',
-    'page arguments' => array(3, ),
+    'page arguments' => array(3),
     'access callback' => TRUE,
     'file' => 'training.pages.inc',
     'weight' => 1,
@@ -71,7 +73,7 @@ function training_menu(){
   $menu['training/menu/tabs/fourth'] = array(
     'title' => 'Fourth',
     'page callback' => 'training_menu_tabs',
-    'page arguments' => array(3, ),
+    'page arguments' => array(3),
     'access callback' => TRUE,
     'file' => 'training.pages.inc',
     'weight' => 2,
@@ -101,7 +103,7 @@ function training_menu(){
   $menu['training/menu/arguments/%/%'] = array(
     'title' => 'Menu arguments',
     'page callback' => 'training_menu_arguments',
-    'page arguments' => array(3,4 ),
+    'page arguments' => array(3, 4),
     'access callback' => TRUE,
     'file' => 'training.pages.inc',
   );
@@ -115,7 +117,7 @@ function training_menu(){
   $menu['training/menu/default_arg/%digit'] = array(
     'title' => 'Menu preprocessing argument',
     'page callback' => 'training_menu_arguments_preprocessing',
-    'page arguments' => array(3 ),
+    'page arguments' => array(3),
     'access callback' => TRUE,
     'file' => 'training.pages.inc',
   );
@@ -127,7 +129,7 @@ function training_menu(){
   $menu['training/menu/main'] = array(
     'title' => 'Item in main menu',
     'menu_name' => 'main-menu',
-    'access arguments' => array('train', ),
+    'access arguments' => array('train'),
     'file' => 'training.pages.inc',
   );
   $menu['training/theme'] = array(
@@ -163,31 +165,38 @@ function training_menu(){
     'title' => 'Form Example',
     'description' => 'This page is Form Example',
     'page callback' => 'training_example_form_callback',
-    'page arguments' => array('training_google_form', ),
+    'page arguments' => array('training_google_form'),
     'access callback' => TRUE,
     'file' => 'training.pages.inc',
   );
+
   return $menu;
 }
 
 /**
  * Check access for page Custom Access Menu Item.
- * $user - a global variable keeps the user basic information about the current user.
- * $role_name - param contents role authenticated user
+ *
+ * @param string $role_name
+ *   The role required for access.
+ *
  * @return bool
+ *   True if the acting user has the role specified.
  */
-function training_custom_access($role_name){
+function training_custom_access($role_name) {
   global $user;
   return in_array($role_name, $user->roles);
 }
 
 /**
- * Preprocessing argument. Returns the new value of the argument
- * @param $arg - argument in URL training/menu/default_arg/%digit
+ * Displays a specific string, depending on a number in the address bar.
+ *
+ * @param int $arg
+ *   Integer argument in the address bar.
+ *
  * @return string
+ *   A string that corresponds to an integer in the address bar, or NULL if there is no match.
  */
-
-function digit_load($arg){
+function digit_load($arg) {
   switch ($arg) {
     case 1:
       $arg = 'one';
@@ -204,28 +213,27 @@ function digit_load($arg){
     default:
       $arg = NULL;
   }
+
   return $arg;
 }
 
 /**
- * Returns a dynamic page title
- * string $user_name - contents user name
+ * Title callback to rename the title dynamically.
+ *
  * @return string
+ *   A string that contents dynamic title.
  */
-
-function training_menu_title_callback(){
+function training_menu_title_callback() {
   global $user;
-  isset($user->name)?$user_name=$user->name:$user_name='anonymous';
-  return 'Dynamic title: username= '.$user_name;
+  $user_name = isset($user->name) ? $user->name : 'anonymous';
+
+  return 'Dynamic title: username = ' . $user_name;
 }
 
-
 /**
- * Implements hook_permission()
- * array $permission - array of permission
- * @return array
+ * Implements hook_permission().
  */
- function training_permission(){
+ function training_permission() {
   $permission = array(
     'train' => array(
       'title' => 'Access protected menu example',
@@ -240,14 +248,25 @@ function training_menu_title_callback(){
   return $permission;
 }
 
-function training_google_form($form, &$form_state){
+/**
+ * Creates example form.
+ *
+ * @param array $form
+ *   Array of form elements.
+ *
+ * @param array $form_state
+ *   Array of form parameters.
+ *
+ * @return array
+ *   Array of form elements.
+ */
+function training_google_form($form, &$form_state) {
   $form = array();
-  $form['group'] = array( //группа элементов формы
+  $form['group'] = array(
     '#type' => 'fieldset',
     '#title' => 'group',
-    '#collapsible' => TRUE, //сворачиваемость
-    '#collapsed' => TRUE, //свернута по умолчанию
-
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
   );
   $form['group']['text'] = array(
     '#type' => 'textfield',
@@ -259,24 +278,20 @@ function training_google_form($form, &$form_state){
     '#required' => TRUE,
   );
   $form['#attached']['css'] = array(
-    //путь к файлу
+    //Path to the css file
   );
   $form['submit'] = array(
     '#type' => 'submit',
-    '#value' => 'ok'
+    '#value' => t('ok'),
   );
+
   return $form;
 }
 
-
 /**
- * Implements hook_form_FORM_ID_alter
- * @param $form
- * @param $form_state
- * @param $form_id
+ * Implements hook_form_FORM_ID_alter().
  */
-function training_form_user_login_block_alter(&$form, &$form_state, $form_id ){
-
+function training_form_user_login_block_alter(&$form, &$form_state, $form_id) {
   array_unshift($form['#validate'], 'secret_key_validate');
   $form['#theme'] = 'test_form_theme_function';
   $form['name']['#weight'] = -2;
@@ -287,59 +302,70 @@ function training_form_user_login_block_alter(&$form, &$form_state, $form_id ){
     '#size' => 15,
     '#weight' => 0,
   );
-  if(isset($form_state['input']['secret_key']) && $form_state['input']['secret_key'] == 'сим-сим откройся'){
-    $form['name']['#required'] = false;
-    $form['pass']['#required'] = false;
+  if(isset($form_state['input']['secret_key']) && $form_state['input']['secret_key'] == 'OpenSimSim') {
+    $form['name']['#required'] = FALSE;
+    $form['pass']['#required'] = FALSE;
   }
   $form['#submit'][] = 'secret_key_submit';
-  $path = drupal_get_path('module','training') . '/css/training.css';
-  drupal_add_css($path);
+  $form['#attached']['css'] = array(
+    drupal_get_path('module', 'training') . '/css/training.css',
+  );
 }
 
 /**
- * Validates elements secret_key and logins as admin
- * @param $form
- * @param $form_state
+ * Validation function for user_login_block.
+ *
+ * Validates elements secret_key and logins current user as admin.
+ *
+ * @param array $form
+ *   Array of form elements.
+ *
+ * @param array $form_state
+ *   Array of form elements.
  */
-function secret_key_validate($form, &$form_state){
-  if ($form_state['values']['secret_key'] == 'сим-сим откройся'){
+function secret_key_validate($form, &$form_state) {
+  if ($form_state['values']['secret_key'] == 'OpenSimSim') {
    $form_state['values']['name'] = 'admin';
    $form_state['values']['pass'] = 'admin';
   }
 }
 
 /**
- * Submitted for user_login_block
- * @param $form
- * @param $form_state
+ * Submit function for user_login_block.
+ *
+ * @param array $form
+ *   Array of form elements.
+ *
+ * @param array $form_state
+ *   Array of form elements.
  */
-function secret_key_submit($form, &$form_state){
-
-  if ($form_state['values']['secret_key'] == 'сим-сим откройся'){
+function secret_key_submit($form, &$form_state) {
+  if ($form_state['values']['secret_key'] == 'OpenSimSim') {
     user_load(1);
     user_login_finalize($form_state);
   }
 }
 
 /**
- * Implements hook_theme
- * @return array
+ * Implements hook_theme().
  */
-function training_theme(){
+function training_theme() {
   $theme = array();
   $theme['test_form_theme_function'] = array(
     'render element' => 'form',
     'arguments' => array('form' => NULL),
-    //'template' => 'templates/training_template'
   );
   return $theme;
 }
 
 /**
- * Rendering custom layout user_login_block
- * @param $form
+ * Theming a custom layout for user_login_block.
+ *
+ * @param array $form
+ *   Array of form elements.
+ *
  * @return string
- * @throws \Exception
+ *  String contents HTML tags for custom layout.
  */
 function theme_test_form_theme_function($form) {
   $attributes = array(
@@ -370,9 +396,14 @@ function theme_test_form_theme_function($form) {
   ));
 }
 
+/**
+ * Implements hook_block_info().
+ */
+function training_block_info() {
+  $blocks['exchange'] = array(
+    'info' => t('Exchange'),
+    'cache' => DRUPAL_CACHE_GLOBAL,
+  );
 
-/*function theme_training_render_function($variables){
-  $type = $variables['type'];
-  $val = $variables['val'];
-  return $type . '::' . $val;
-}*/
+  return $blocks;
+}
