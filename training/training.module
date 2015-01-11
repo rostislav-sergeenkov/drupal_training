@@ -184,6 +184,7 @@ function training_menu() {
  */
 function training_custom_access($role_name) {
   global $user;
+
   return in_array($role_name, $user->roles);
 }
 
@@ -302,7 +303,7 @@ function training_form_user_login_block_alter(&$form, &$form_state, $form_id) {
     '#size' => 15,
     '#weight' => 0,
   );
-  if(isset($form_state['input']['secret_key']) && $form_state['input']['secret_key'] == 'OpenSimSim') {
+  if (isset($form_state['input']['secret_key']) && $form_state['input']['secret_key'] == 'OpenSimSim') {
     $form['name']['#required'] = FALSE;
     $form['pass']['#required'] = FALSE;
   }
@@ -355,6 +356,7 @@ function training_theme() {
     'render element' => 'form',
     'arguments' => array('form' => NULL),
   );
+
   return $theme;
 }
 
@@ -390,6 +392,7 @@ function theme_test_form_theme_function($form) {
       drupal_render($form['form']['form_id']),
     ),
   );
+
   return theme('table', array(
     'rows' => $rows,
     'attributes' => $attributes,
@@ -406,4 +409,71 @@ function training_block_info() {
   );
 
   return $blocks;
+}
+
+/**
+ * Implements hook_block_view().
+ *
+ * Sends a request to the specified address. Parses the xml data. Generates
+content for the block.
+ */
+function training_block_view($delta='') {
+  $date = '';
+  $content = '';
+  $request = 'http://www.nbrb.by/Services/XmlExRates.aspx';
+  $request = drupal_http_request($request);
+  $data = new SimpleXMLElement($request->data);
+  foreach ($data->attributes() as $key => $val) {
+    $date .= $val;
+  }
+  foreach ($data->Currency as $value) {
+    if (variable_get('check' . $value->CharCode)) {
+      $content .= '<tr><td>' .  $value->Name . '</td>
+                   <td>' . $value->CharCode . '</td>
+                   <td>' . $value->Rate . '</td></tr>';
+    }
+  }
+  $block = array();
+  if ($delta == 'exchange') {
+    $block['subject'] = t('Title block');
+    $block['content'] = t('Обновлено %date', array('%date' => $date)) .
+                          '<table>' . $content . '</table>';
+  }
+
+  return $block;
+}
+
+/**
+ * Implements hook_block_configure().
+ */
+function training_block_configure($delta = '') {
+  $form = array();
+  if ($delta == 'exchange') {
+    $request = 'http://www.nbrb.by/Services/XmlExRates.aspx';
+    $request = drupal_http_request($request);
+    $data = new SimpleXMLElement($request->data);
+    foreach ($data->Currency as $value) {
+      $form['check' . $value->CharCode] = array(
+        '#type' => 'checkbox',
+        '#title' => $value->Name,
+        '#default_value' => variable_get('check' . $value->CharCode),
+      );
+    }
+  }
+
+  return $form;
+}
+
+/**
+ * Implements hook_block_save().
+ */
+function training_block_save($delta = '', $edit = array()) {
+  if ($delta == 'exchange') {
+    $request = 'http://www.nbrb.by/Services/XmlExRates.aspx';
+    $request = drupal_http_request($request);
+    $data = new SimpleXMLElement($request->data);
+    foreach ($data->Currency as $value) {
+      variable_set('check' . $value->CharCode, $edit['check' . $value->CharCode]);
+    }
+  }
 }
