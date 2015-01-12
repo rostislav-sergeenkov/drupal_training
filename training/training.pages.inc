@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * Theme file for training module.
+ * Page callbacks for the training module.
  */
 
 /**
@@ -25,10 +25,10 @@ function training_example_form_callback($arg) {
  */
 function training_theme_html() {
   $array = array(
-    '<a href="theme/list">' . t('List') . '</a>',
-    '<a href="theme/table">' . t('Table') . '</a>',
-    '<a href="theme/image">' . t('Image') . '</a>',
-    '<a href="theme/access">' . t('Access') . '</a>',
+    l(t('List'), 'training/theme/list'),
+    l(t('Table'), 'training/theme/table'),
+    l(t('Image'), 'training/theme/image'),
+    l(t('Access'), 'training/theme/access'),
   );
 
   return theme('item_list', array(
@@ -82,8 +82,9 @@ function training_theme_table() {
  *   String contents HTML tags for custom layout.
  */
 function training_image_callback() {
+  $output = array();
   $file_path = drupal_realpath('modules/image/sample.png');
-  $source = (object)array(
+  $source = (object) array(
     'uid' => 1,
     'uri' => $file_path,
     'filename' => basename($file_path),
@@ -91,22 +92,25 @@ function training_image_callback() {
   );
   $directory = 'public://';
   file_copy($source, $directory, $replace = FILE_EXISTS_REPLACE);
-  $output = '';
-  $array_style=image_styles();
+  $array_style = image_styles();
   foreach ($array_style as $val) {
     $style_name = $val['name'];
     $path = 'public://sample.png';
     $attributes = array(
       'class' => 'simple-image',
     );
-    $output .= '<li>' . theme('image_style', array(
+    $output[] = theme('image_style', array(
      'style_name' => $style_name,
      'path' => $path,
      'attributes' => $attributes,
-    )) . '</li>';
+    ));
   }
 
-  return '<ul>' . $output . '</ul>';
+  return theme('item_list', array(
+    'items' => $output,
+    'type' => 'ol',
+    'title' => t('Default image styles'),
+  ));
 }
 
 /**
@@ -157,7 +161,7 @@ function training_menu_tabs_default() {
 /**
  * Rendering page with tabs and dynamic content.
  *
- * @param  array $arg
+ * @param array $arg
  *   Argument in URL /$arg.
  *
  * @return string
@@ -172,7 +176,6 @@ function training_menu_tabs($arg) {
  *
  * @param array $arg1
  *   First argument in training/menu/arguments/$arg1/$arg2.
- *
  * @param array $arg2
  *   Second argument in training/menu/arguments/$arg1/$arg2.
  *
@@ -187,6 +190,7 @@ function training_menu_arguments($arg1 = NULL, $arg2 = NULL) {
   if (!empty($arg2)) {
     $output .=  t('Argument 2=%arg', array('%arg' => $arg2));
   }
+
   return $output;
 }
 
@@ -208,6 +212,8 @@ function training_menu_arguments_display($arg) {
  *
  * @param array $arg
  *   Argument that returns by function  digit_load($arg).
+ *
+ * @see digit_load()
  *
  * @return string
  *   String contents HTML tags for custom layout or error 403 if argument is empty.

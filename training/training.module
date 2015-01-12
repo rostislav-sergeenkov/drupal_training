@@ -4,6 +4,7 @@
  * Module file for training module.
  */
 
+define('TRAINING_BLOCK_RATES_SERVICE', 'http://www.nbrb.by/Services/XmlExRates.aspx');
 /**
  * Implements hook_menu().
  */
@@ -15,9 +16,9 @@ function training_menu() {
     'page callback' => 'training_page_html',
     'access callback' => TRUE,
     'file' => 'training.pages.inc',
-    'expanded' => true,
+    'expanded' => TRUE,
   );
-  $menu['training/menu/custom_access '] = array(
+  $menu['training/menu/custom_access'] = array(
     'title' => 'Custom Access Menu Item',
     'description' => 'This page is accessible to authenticated users only',
     'page callback' => 'training_page_html',
@@ -25,7 +26,7 @@ function training_menu() {
     'access arguments' => array('authenticated user'),
     'file' => 'training.pages.inc',
   );
-  $menu['training/menu/permissioned '] = array(
+  $menu['training/menu/permissioned'] = array(
     'title' => 'Permissioned Menu Item',
     'description' => 'This page is accessible to permissioned users only',
     'page callback' => 'training_page_html',
@@ -110,7 +111,7 @@ function training_menu() {
   $menu['training/menu/placeholder/%/display'] = array(
     'title' => 'Menu argument before display',
     'page callback' => 'training_menu_arguments_display',
-    'page arguments' => array(3 ),
+    'page arguments' => array(3),
     'access callback' => TRUE,
     'file' => 'training.pages.inc',
   );
@@ -138,7 +139,7 @@ function training_menu() {
     'page callback' => 'training_theme_html',
     'access callback' => TRUE,
     'file' => 'training.pages.inc',
-    'expanded' => true,
+    'expanded' => TRUE,
   );
   $menu['training/theme/table'] = array(
     'title' => 'Table Theme',
@@ -254,7 +255,6 @@ function training_menu_title_callback() {
  *
  * @param array $form
  *   Array of form elements.
- *
  * @param array $form_state
  *   Array of form parameters.
  *
@@ -316,11 +316,10 @@ function training_form_user_login_block_alter(&$form, &$form_state, $form_id) {
 /**
  * Validation function for user_login_block.
  *
- * Validates elements secret_key and logins current user as admin.
+ * Validates element secret_key and logs in current user as admin.
  *
  * @param array $form
  *   Array of form elements.
- *
  * @param array $form_state
  *   Array of form elements.
  */
@@ -336,7 +335,6 @@ function secret_key_validate($form, &$form_state) {
  *
  * @param array $form
  *   Array of form elements.
- *
  * @param array $form_state
  *   Array of form elements.
  */
@@ -400,6 +398,49 @@ function theme_test_form_theme_function($form) {
 }
 
 /**
+ * Sends a request to the rates service.
+ *
+ * Parses the xml data. Converts xml object properties to string,
+ * writes them to arrays. The resulting arrays sets in the variables:
+ * $training_data_rates_service, $training_date_update_rates_service.
+ */
+function _training_request_rates_service() {
+  $date = '';
+  $array = array();
+  $request = drupal_http_request(TRAINING_BLOCK_RATES_SERVICE);
+  $data = new SimpleXMLElement($request->data);
+  foreach ($data->Currency as $value) {
+    $array[] = array(
+      'CharCode' => (string) $value->CharCode,
+      'Name' => (string) $value->Name,
+      'Rate' => (string) $value->Rate,
+    );
+  }
+  foreach ($data->attributes() as $key => $val) {
+    $date .= (string) $val;
+  }
+  variable_set('training_data_rates_service', $array);
+  variable_set('training_date_update_rates_service', $date);
+}
+
+/**
+ * Implements hook_cron().
+ *
+ * Calls custom function _training_request_rates_service().
+ *
+ * @see _training_request_rates_service()
+ */
+function training_cron() {
+  $default = time();
+  $last_crone = variable_get('last_start', $default);
+  //sets the start-up period (15 min).
+  if ($default-$last_crone >= 900) {
+    variable_set('last_start', time());
+    _training_request_rates_service();
+  }
+}
+
+/**
  * Implements hook_block_info().
  */
 function training_block_info() {
@@ -413,31 +454,25 @@ function training_block_info() {
 
 /**
  * Implements hook_block_view().
- *
- * Sends a request to the specified address. Parses the xml data. Generates
-content for the block.
  */
 function training_block_view($delta='') {
-  $date = '';
-  $content = '';
-  $request = 'http://www.nbrb.by/Services/XmlExRates.aspx';
-  $request = drupal_http_request($request);
-  $data = new SimpleXMLElement($request->data);
-  foreach ($data->attributes() as $key => $val) {
-    $date .= $val;
-  }
-  foreach ($data->Currency as $value) {
-    if (variable_get('check' . $value->CharCode)) {
-      $content .= '<tr><td>' .  $value->Name . '</td>
-                   <td>' . $value->CharCode . '</td>
-                   <td>' . $value->Rate . '</td></tr>';
+  $date = variable_get('training_date_update_rates_service');
+  $data = variable_get('training_data_rates_service');
+  $rows = array();
+  $block = array();
+  foreach ($data as $value) {
+    if (variable_get('check' . $value['CharCode'])) {
+      $rows[] = array(
+        $value['Name'],
+        $value['CharCode'],
+        $value['Rate'],
+      );
     }
   }
-  $block = array();
   if ($delta == 'exchange') {
     $block['subject'] = t('Title block');
     $block['content'] = t('Обновлено %date', array('%date' => $date)) .
-                          '<table>' . $content . '</table>';
+                            theme('table', array('rows' => $rows));
   }
 
   return $block;
@@ -449,14 +484,12 @@ function training_block_view($delta='') {
 function training_block_configure($delta = '') {
   $form = array();
   if ($delta == 'exchange') {
-    $request = 'http://www.nbrb.by/Services/XmlExRates.aspx';
-    $request = drupal_http_request($request);
-    $data = new SimpleXMLElement($request->data);
-    foreach ($data->Currency as $value) {
-      $form['check' . $value->CharCode] = array(
+    $data = variable_get('training_data_rates_service');
+    foreach ($data as $value) {
+      $form['check' . $value['CharCode']] = array(
         '#type' => 'checkbox',
-        '#title' => $value->Name,
-        '#default_value' => variable_get('check' . $value->CharCode),
+        '#title' => $value['Name'],
+        '#default_value' => variable_get('check' . $value['CharCode']),
       );
     }
   }
@@ -469,11 +502,9 @@ function training_block_configure($delta = '') {
  */
 function training_block_save($delta = '', $edit = array()) {
   if ($delta == 'exchange') {
-    $request = 'http://www.nbrb.by/Services/XmlExRates.aspx';
-    $request = drupal_http_request($request);
-    $data = new SimpleXMLElement($request->data);
-    foreach ($data->Currency as $value) {
-      variable_set('check' . $value->CharCode, $edit['check' . $value->CharCode]);
+    $data = variable_get('training_data_rates_service');
+    foreach ($data as $value) {
+      variable_set('check' . $value['CharCode'], $edit['check' . $value['CharCode']]);
     }
   }
 }
