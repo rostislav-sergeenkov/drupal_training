@@ -401,16 +401,15 @@ function theme_test_form_theme_function($form) {
  * Sends a request to the rates service.
  *
  * Parses the xml data. Converts xml object properties to string,
- * writes them to arrays. The resulting arrays sets in the variables:
- * $training_data_rates_service, $training_date_update_rates_service.
+ * writes them to arrays. The resulting arrays sets in the variables.
  */
 function _training_request_rates_service() {
   $date = '';
-  $array = array();
+  $array_data = array();
   $request = drupal_http_request(TRAINING_BLOCK_RATES_SERVICE);
   $data = new SimpleXMLElement($request->data);
   foreach ($data->Currency as $value) {
-    $array[] = array(
+    $array_data[] = array(
       'CharCode' => (string) $value->CharCode,
       'Name' => (string) $value->Name,
       'Rate' => (string) $value->Rate,
@@ -419,16 +418,12 @@ function _training_request_rates_service() {
   foreach ($data->attributes() as $key => $val) {
     $date .= (string) $val;
   }
-  variable_set('training_data_rates_service', $array);
+  variable_set('training_data_rates_service', $array_data);
   variable_set('training_date_update_rates_service', $date);
 }
 
 /**
  * Implements hook_cron().
- *
- * Calls custom function _training_request_rates_service().
- *
- * @see _training_request_rates_service()
  */
 function training_cron() {
   $default = time();
@@ -455,9 +450,9 @@ function training_block_info() {
 /**
  * Implements hook_block_view().
  */
-function training_block_view($delta='') {
-  $date = variable_get('training_date_update_rates_service');
-  $data = variable_get('training_data_rates_service');
+function training_block_view($delta = '') {
+  $date = variable_get('training_date_update_rates_service', array());
+  $data = variable_get('training_data_rates_service', array());
   $rows = array();
   $block = array();
   foreach ($data as $value) {
@@ -469,7 +464,7 @@ function training_block_view($delta='') {
       );
     }
   }
-  if ($delta == 'exchange') {
+  if ($delta == 'exchange' && !empty($date)) {
     $block['subject'] = t('Title block');
     $block['content'] = t('Обновлено %date', array('%date' => $date)) .
                             theme('table', array('rows' => $rows));
@@ -484,12 +479,12 @@ function training_block_view($delta='') {
 function training_block_configure($delta = '') {
   $form = array();
   if ($delta == 'exchange') {
-    $data = variable_get('training_data_rates_service');
+    $data = variable_get('training_data_rates_service', array());
     foreach ($data as $value) {
       $form['check' . $value['CharCode']] = array(
         '#type' => 'checkbox',
         '#title' => $value['Name'],
-        '#default_value' => variable_get('check' . $value['CharCode']),
+        '#default_value' => variable_get('check' . $value['CharCode'], array()),
       );
     }
   }
@@ -502,7 +497,7 @@ function training_block_configure($delta = '') {
  */
 function training_block_save($delta = '', $edit = array()) {
   if ($delta == 'exchange') {
-    $data = variable_get('training_data_rates_service');
+    $data = variable_get('training_data_rates_service', array());
     foreach ($data as $value) {
       variable_set('check' . $value['CharCode'], $edit['check' . $value['CharCode']]);
     }

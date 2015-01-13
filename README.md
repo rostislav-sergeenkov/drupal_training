@@ -1,24 +1,55 @@
 Drupal Training
-2222
 ===============
-Some changes
-24.12
-Привет, я вчера накосячила что-то с коммитами, поэтому попробую повторить
-Значит в папке training кастомный модуль. там реализована первая часть дз, связанная с меню
-29.12
-Привет! я вроде закончила домашнее задание по первому вебинару. Но "вроде" потому, что тест, который прилагается к первому вебинару
-для разработанного модуля, выдал большое количество ошибок. некоторые я пофиксила, но некоторые..я не совсем понимаю
-в чем там ошибка, а с некоторыми вобще не согласна.
-поэтому пока вот отправлю тебе то, что есть и сегодня-завтра планирую еще поразбираться с багами
-спасибо) хороших праздников) 
-30.12
-Привет. я начала вебинар 2. часть: формы. Сделала дз. К сожалению запись вебинара о первой части: блоки, отсутствует((
-пока дз не смогла сделать
-09.01
-Привет, постаралась поправить все замечания. Спасибо большое, за такое подробное комментирование! 
-Есть некоторые вопросы, в понедельник, как вернусь на работу, постараюсь задать их всем скопом)
-11.01
-Привет, я закончила второе задание второго вебинара. Блоки. Есть некоторые вопросы по кешированию в друпал. 
-Хотелось узнать по подробнее) Спасибо
-12.01
-Вроде пофиксила. только вот насчет пустой строки в конце файла. я настроила шторм, у меня есть эта строка, я не знаю почему ее гит не видит(
+
+INTRODUCTION
+------------
+The training module is designed to demonstrate the homework.
+This module presents various examples of work with Drupal API.
+
+REQUIREMENTS
+------------
+No special requirements.
+
+RECOMMENDED MODULES
+-------------------
+ * Examples for Developers (https://www.drupal.org/project/examples):
+   The Examples for Developers project aims to provide high-quality,
+   well-documented API examples for a broad range of Drupal core functionality.
+   
+INSTALLATION
+------------
+ * Install as you would normally install a contributed Drupal module. See:
+   https://drupal.org/documentation/install/modules-themes/modules-7
+   for further information.
+   
+CONFIGURATION
+-------------
+ * Configure user permissions in Administration » People » Permissions:
+
+
+   - Use the administration pages and help (System module)
+
+
+     Some pages and menu items in modules require configuration of user access rights.
+	 Depending on the setting of access rights to users will display different content.
+
+
+   - Access protected menu example
+
+
+     Users in roles with the "Access protected menu example" permission will see
+     page Permissioned Menu Item of training module.
+
+
+   - Access protected content
+
+
+     Users in roles with the "Access protected content" permission will see
+	 special content on Access protected content page.
+	 
+MAINTAINERS
+-----------
+Current maintainers:
+ * Tatsiana Shukevich
+	 
+

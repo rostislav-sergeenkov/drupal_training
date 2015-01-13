@@ -14,7 +14,7 @@
  *   The form array.
  */
 function training_example_form_callback($arg) {
-  return drupal_get_form($arg);
+  return drupal_get_form($arg, array());
 }
 
 /**
@@ -24,7 +24,7 @@ function training_example_form_callback($arg) {
  *   String contents HTML tags for custom layout.
  */
 function training_theme_html() {
-  $array = array(
+  $array_items = array(
     l(t('List'), 'training/theme/list'),
     l(t('Table'), 'training/theme/table'),
     l(t('Image'), 'training/theme/image'),
@@ -32,7 +32,7 @@ function training_theme_html() {
   );
 
   return theme('item_list', array(
-    'items' => $array,
+    'items' => $array_items,
     'type' => 'ol',
     'title' => t('Links to themes'),
   ));

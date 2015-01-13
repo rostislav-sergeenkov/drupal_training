@@ -6,10 +6,6 @@
 
 /**
  * Implements hook_enable().
- *
- * Calls function _training_request_rates_service().
- *
- * @see _training_request_rates_service()
  */
 function training_enable() {
   _training_request_rates_service();
@@ -17,9 +13,6 @@ function training_enable() {
 
 /**
  * Implements hook_disable().
- *
- * Delete variable $training_data_rates_service.
- * Delete variable $training_date_update_rates_service.
  */
 function training_disable() {
   variable_del('training_data_rates_service');
