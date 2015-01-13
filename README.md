@@ -51,5 +51,3 @@ MAINTAINERS
 -----------
 Current maintainers:
  * Tatsiana Shukevich
-	 
-
