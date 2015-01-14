@@ -1,0 +1,20 @@
+<?php
+/**
+ * @file
+ * File install for the training module.
+ */
+
+/**
+ * Implements hook_enable().
+ */
+function training_enable() {
+  _training_request_rates_service();
+}
+
+/**
+ * Implements hook_disable().
+ */
+function training_disable() {
+  variable_del('training_data_rates_service');
+  variable_del('training_date_update_rates_service');
+}
