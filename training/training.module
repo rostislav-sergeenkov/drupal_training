@@ -5,6 +5,7 @@
  */
 
 define('TRAINING_BLOCK_RATES_SERVICE', 'http://www.nbrb.by/Services/XmlExRates.aspx');
+
 /**
  * Implements hook_menu().
  */
@@ -175,6 +176,143 @@ function training_menu() {
 }
 
 /**
+ * Implements hook_permission().
+ */
+function training_permission() {
+  $permission = array(
+    'train' => array(
+      'title' => 'Access protected menu example',
+      'description' => 'Use this to control access to page Permissioned Menu Item of training module',
+    ),
+    'train_theme' => array(
+      'title' => 'Access protected content',
+      'description' => 'Use this to control access to page Access Theme of training module',
+    ),
+  );
+
+  return $permission;
+}
+
+/**
+ * Implements hook_block_info().
+ */
+function training_block_info() {
+  $blocks['exchange'] = array(
+    'info' => t('Exchange'),
+    'cache' => DRUPAL_CACHE_GLOBAL,
+  );
+
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function training_block_view($delta = '') {
+  $date = variable_get('training_date_update_rates_service', array());
+  $data = variable_get('training_data_rates_service', array());
+  $rows = array();
+  $block = array();
+  foreach ($data as $value) {
+    if (variable_get('check' . $value['CharCode'])) {
+      $rows[] = array(
+        $value['Name'],
+        $value['CharCode'],
+        $value['Rate'],
+      );
+    }
+  }
+  if ($delta == 'exchange' && !empty($date)) {
+    $block['subject'] = t('Title block');
+    $block['content'] = t('Обновлено %date', array('%date' => $date)) .
+      theme('table', array('rows' => $rows));
+  }
+
+  return $block;
+}
+
+/**
+ * Implements hook_block_configure().
+ */
+function training_block_configure($delta = '') {
+  $form = array();
+  if ($delta == 'exchange') {
+    $data = variable_get('training_data_rates_service', array());
+    foreach ($data as $value) {
+      $form['check' . $value['CharCode']] = array(
+        '#type' => 'checkbox',
+        '#title' => $value['Name'],
+        '#default_value' => variable_get('check' . $value['CharCode'], array()),
+      );
+    }
+  }
+
+  return $form;
+}
+
+/**
+ * Implements hook_block_save().
+ */
+function training_block_save($delta = '', $edit = array()) {
+  if ($delta == 'exchange') {
+    $data = variable_get('training_data_rates_service', array());
+    foreach ($data as $value) {
+      variable_set('check' . $value['CharCode'], $edit['check' . $value['CharCode']]);
+    }
+  }
+}
+
+/**
+ * Implements hook_cron().
+ */
+function training_cron() {
+  $default = REQUEST_TIME;
+  $last_crone = variable_get('last_start', $default);
+  //sets the start-up period (15 min).
+  if ($default-$last_crone >= 900) {
+    variable_set('last_start', REQUEST_TIME);
+    _training_request_rates_service();
+  }
+}
+
+/**
+ * Implements hook_theme().
+ */
+function training_theme() {
+  $theme = array();
+  $theme['test_form_theme_function'] = array(
+    'render element' => 'form',
+    'arguments' => array('form' => NULL),
+  );
+
+  return $theme;
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function training_form_user_login_block_alter(&$form, &$form_state, $form_id) {
+  array_unshift($form['#validate'], 'secret_key_validate');
+  $form['#theme'] = 'test_form_theme_function';
+  $form['name']['#weight'] = -2;
+  $form['pass']['#weight'] = -1;
+  $form['secret_key'] = array(
+    '#type' => 'textfield',
+    '#title' => 'Secret Key',
+    '#size' => 15,
+    '#weight' => 0,
+  );
+  if (isset($form_state['input']['secret_key']) && $form_state['input']['secret_key'] == 'OpenSimSim') {
+    $form['name']['#required'] = FALSE;
+    $form['pass']['#required'] = FALSE;
+  }
+  $form['#submit'][] = 'secret_key_submit';
+  $form['#attached']['css'] = array(
+    drupal_get_path('module', 'training') . '/css/training.css',
+  );
+}
+
+/**
  * Check access for page Custom Access Menu Item.
  *
  * @param string $role_name
@@ -220,7 +358,7 @@ function digit_load($arg) {
 }
 
 /**
- * Title callback to rename the title dynamically.
+ * Renames the title dynamically.
  *
  * @return string
  *   A string that contents dynamic title.
@@ -233,88 +371,7 @@ function training_menu_title_callback() {
 }
 
 /**
- * Implements hook_permission().
- */
- function training_permission() {
-  $permission = array(
-    'train' => array(
-      'title' => 'Access protected menu example',
-      'description' => 'Use this to control access to page Permissioned Menu Item of training module',
-    ),
-    'train_theme' => array(
-      'title' => 'Access protected content',
-      'description' => 'Use this to control access to page Access Theme of training module',
-    ),
-  );
-
-  return $permission;
-}
-
-/**
- * Creates example form.
- *
- * @param array $form
- *   Array of form elements.
- * @param array $form_state
- *   Array of form parameters.
- *
- * @return array
- *   Array of form elements.
- */
-function training_google_form($form, &$form_state) {
-  $form = array();
-  $form['group'] = array(
-    '#type' => 'fieldset',
-    '#title' => 'group',
-    '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
-  );
-  $form['group']['text'] = array(
-    '#type' => 'textfield',
-    '#title' => 'title',
-  );
-  $form['group']['text2'] = array(
-    '#type' => 'textfield',
-    '#title' => 'title2',
-    '#required' => TRUE,
-  );
-  $form['#attached']['css'] = array(
-    //Path to the css file
-  );
-  $form['submit'] = array(
-    '#type' => 'submit',
-    '#value' => t('ok'),
-  );
-
-  return $form;
-}
-
-/**
- * Implements hook_form_FORM_ID_alter().
- */
-function training_form_user_login_block_alter(&$form, &$form_state, $form_id) {
-  array_unshift($form['#validate'], 'secret_key_validate');
-  $form['#theme'] = 'test_form_theme_function';
-  $form['name']['#weight'] = -2;
-  $form['pass']['#weight'] = -1;
-  $form['secret_key'] = array(
-    '#type' => 'textfield',
-    '#title' => 'Secret Key',
-    '#size' => 15,
-    '#weight' => 0,
-  );
-  if (isset($form_state['input']['secret_key']) && $form_state['input']['secret_key'] == 'OpenSimSim') {
-    $form['name']['#required'] = FALSE;
-    $form['pass']['#required'] = FALSE;
-  }
-  $form['#submit'][] = 'secret_key_submit';
-  $form['#attached']['css'] = array(
-    drupal_get_path('module', 'training') . '/css/training.css',
-  );
-}
-
-/**
- * Validation function for user_login_block.
+ * Validates form user_login_block.
  *
  * Validates element secret_key and logs in current user as admin.
  *
@@ -331,7 +388,7 @@ function secret_key_validate($form, &$form_state) {
 }
 
 /**
- * Submit function for user_login_block.
+ * Submits form user_login_block.
  *
  * @param array $form
  *   Array of form elements.
@@ -346,20 +403,7 @@ function secret_key_submit($form, &$form_state) {
 }
 
 /**
- * Implements hook_theme().
- */
-function training_theme() {
-  $theme = array();
-  $theme['test_form_theme_function'] = array(
-    'render element' => 'form',
-    'arguments' => array('form' => NULL),
-  );
-
-  return $theme;
-}
-
-/**
- * Theming a custom layout for user_login_block.
+ * Themes a custom layout for user_login_block.
  *
  * @param array $form
  *   Array of form elements.
@@ -420,86 +464,4 @@ function _training_request_rates_service() {
   }
   variable_set('training_data_rates_service', $array_data);
   variable_set('training_date_update_rates_service', $date);
-}
-
-/**
- * Implements hook_cron().
- */
-function training_cron() {
-  $default = time();
-  $last_crone = variable_get('last_start', $default);
-  //sets the start-up period (15 min).
-  if ($default-$last_crone >= 900) {
-    variable_set('last_start', time());
-    _training_request_rates_service();
-  }
-}
-
-/**
- * Implements hook_block_info().
- */
-function training_block_info() {
-  $blocks['exchange'] = array(
-    'info' => t('Exchange'),
-    'cache' => DRUPAL_CACHE_GLOBAL,
-  );
-
-  return $blocks;
-}
-
-/**
- * Implements hook_block_view().
- */
-function training_block_view($delta = '') {
-  $date = variable_get('training_date_update_rates_service', array());
-  $data = variable_get('training_data_rates_service', array());
-  $rows = array();
-  $block = array();
-  foreach ($data as $value) {
-    if (variable_get('check' . $value['CharCode'])) {
-      $rows[] = array(
-        $value['Name'],
-        $value['CharCode'],
-        $value['Rate'],
-      );
-    }
-  }
-  if ($delta == 'exchange' && !empty($date)) {
-    $block['subject'] = t('Title block');
-    $block['content'] = t('Обновлено %date', array('%date' => $date)) .
-                            theme('table', array('rows' => $rows));
-  }
-
-  return $block;
-}
-
-/**
- * Implements hook_block_configure().
- */
-function training_block_configure($delta = '') {
-  $form = array();
-  if ($delta == 'exchange') {
-    $data = variable_get('training_data_rates_service', array());
-    foreach ($data as $value) {
-      $form['check' . $value['CharCode']] = array(
-        '#type' => 'checkbox',
-        '#title' => $value['Name'],
-        '#default_value' => variable_get('check' . $value['CharCode'], array()),
-      );
-    }
-  }
-
-  return $form;
-}
-
-/**
- * Implements hook_block_save().
- */
-function training_block_save($delta = '', $edit = array()) {
-  if ($delta == 'exchange') {
-    $data = variable_get('training_data_rates_service', array());
-    foreach ($data as $value) {
-      variable_set('check' . $value['CharCode'], $edit['check' . $value['CharCode']]);
-    }
-  }
 }

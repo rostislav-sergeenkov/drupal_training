@@ -5,7 +5,7 @@
  */
 
 /**
- * Rendering example form.
+ * Renders example form.
  *
  * @param array $arg
  *  Id of example form.
@@ -18,7 +18,46 @@ function training_example_form_callback($arg) {
 }
 
 /**
- * Rendering list of links on other theme pages.
+ * Creates example form.
+ *
+ * @param array $form
+ *   Array of form elements.
+ * @param array $form_state
+ *   Array of form parameters.
+ *
+ * @return array
+ *   Array of form elements.
+ */
+function training_google_form($form, &$form_state) {
+  $form = array();
+  $form['group'] = array(
+    '#type' => 'fieldset',
+    '#title' => 'group',
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+  $form['group']['text'] = array(
+    '#type' => 'textfield',
+    '#title' => 'title',
+  );
+  $form['group']['text2'] = array(
+    '#type' => 'textfield',
+    '#title' => 'title2',
+    '#required' => TRUE,
+  );
+  $form['#attached']['css'] = array(
+    //Path to the css file
+  );
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('ok'),
+  );
+
+  return $form;
+}
+
+/**
+ * Renders list of links on other theme pages.
  *
  * @return string
  *   String contents HTML tags for custom layout.
@@ -39,7 +78,7 @@ function training_theme_html() {
 }
 
 /**
- * Rendering sample table at Table theme page.
+ * Renders sample table at Table theme page.
  *
  * @return string
  *   String contents HTML tags for custom layout.
@@ -74,7 +113,7 @@ function training_theme_table() {
 }
 
 /**
- * Rendering list of images with default styles.
+ * Renders list of images with default styles.
  *
  * Moves the image to the selected address. Applies default styles to image.
  *
@@ -114,7 +153,7 @@ function training_image_callback() {
 }
 
 /**
- * Rendering different content for users with Access protected content permission.
+ * Renders different content for users with Access protected content permission.
  *
  * @return string
  *   String contents HTML tags for custom layout.
@@ -129,7 +168,7 @@ function training_access_callback() {
 }
 
 /**
- * Rendering page for menu item Training Landing Page.
+ * Renders page for menu item Training Landing Page.
  *
  * @return string
  *   String contents HTML tags for custom layout.
@@ -139,7 +178,7 @@ function training_page_html() {
 }
 
 /**
- * Rendering page for menu item Callback Menu Item.
+ * Renders page for menu item Callback Menu Item.
  *
  * @return string
  *   String contents HTML tags for custom layout.
@@ -149,7 +188,7 @@ function training_menu_callback() {
 }
 
 /**
- * Rendering page for menu item Tabs Pages.
+ * Renders page for menu item Tabs Pages.
  *
  * @return string
  *   String contents HTML tags for custom layout.
@@ -159,7 +198,7 @@ function training_menu_tabs_default() {
 }
 
 /**
- * Rendering page with tabs and dynamic content.
+ * Renders page with tabs and dynamic content.
  *
  * @param array $arg
  *   Argument in URL /$arg.
@@ -172,7 +211,7 @@ function training_menu_tabs($arg) {
 }
 
 /**
- * Rendering page for menu item Menu arguments.
+ * Renders page for menu item Menu arguments.
  *
  * @param array $arg1
  *   First argument in training/menu/arguments/$arg1/$arg2.
@@ -195,7 +234,7 @@ function training_menu_arguments($arg1 = NULL, $arg2 = NULL) {
 }
 
 /**
- * Rendering page for menu item Menu argument before display.
+ * Renders page for menu item Menu argument before display.
  *
  * @param array $arg
  *   Argument in training/menu/placeholder/$arg/display.
@@ -208,7 +247,7 @@ function training_menu_arguments_display($arg) {
 }
 
 /**
- * Rendering page for menu item Menu preprocessing argument.
+ * Renders page for menu item Menu preprocessing argument.
  *
  * @param array $arg
  *   Argument that returns by function  digit_load($arg).
