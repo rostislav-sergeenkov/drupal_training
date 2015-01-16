@@ -5,16 +5,151 @@
  */
 
 /**
- * Renders example form.
+ * Renders a page with listing of text message.
  *
- * @param array $arg
- *  Id of example form.
+ * Selects rows from table 'text_message' Renders tables with pager and sorting.
  *
- * @return array|mixed
- *   The form array.
+ * @return array
+ *   Renderable array.
  */
-function training_example_form_callback($arg) {
-  return drupal_get_form($arg, array());
+function training_text_message_callback() {
+  $header = array(
+    array('data' => t('Num'), 'field' => 'id'),
+    array('data' => t('Author'), 'field' => 'name'),
+    array('data' => t('Title'), 'field' => 'title'),
+    array('data' => t('Text'), 'field' => 'body'),
+    array('data' => t('Edit')),
+  );
+  $rows = array();
+  $query = db_select('text_message', 'tm');
+  $query->innerJoin('users', 'u', 'tm.uid = u.uid');
+  $query
+    ->fields('tm', array('id', 'title', 'body'))
+    ->fields('u', array('name'));
+  $result = $query
+    ->extend('PagerDefault')
+    ->limit(5)
+    ->extend('TableSort')
+    ->orderByHeader($header)
+    ->execute()->fetchAll();
+  if (!empty($query)) {
+    foreach ($result as $value) {
+      $rows[] = array(
+        $value->id,
+        $value->name,
+        check_plain($value->title),
+        check_plain($value->body),
+        l(t('Edit'), 'training/message/edit/' . $value->id),
+      );
+    }
+  }
+
+  return array(
+    array(
+      '#theme' => 'table',
+      '#header' => $header,
+      '#rows' => $rows,
+    ),
+    array(
+      '#theme' => 'pager',
+      '#quantity' => 5,
+      '#tags' => array('<<', '<', '', '>', '>>'),
+    ),
+  );
+}
+
+/**
+ * Builds form to add text message.
+ *
+ * @param array $form
+ *   Array of form elements.
+ * @param array $form_state
+ *   Array of form parameters.
+ *
+ * @return array
+ *   Array of form elements.
+ */
+function text_message_form($form, &$form_state, $arg = NULL) {
+  $form = array();
+  $form['title_msg'] = array(
+    '#type' => 'textfield',
+    '#title' => 'Title',
+    '#required' => TRUE,
+  );
+  $form['body_msg'] = array(
+    '#type' => 'textarea',
+    '#title' => 'Text',
+    '#required' => TRUE,
+  );
+  $form['id_msg'] = array(
+    '#type' => 'hidden',
+    '#value' => NULL,
+  );
+  $form['submit_msg'] = array(
+    '#type' => 'submit',
+    '#value' => t('Send'),
+  );
+  $form['#submit'][] = 'text_message_submit';
+
+  if (isset($arg)) {
+    $query = db_select('text_message', 'tm');
+    $query
+      ->fields('tm', array('title', 'body'))
+      ->condition('tm.id', $arg);
+    $result = $query->execute()->fetchAssoc();
+    $form['title_msg']['#default_value'] = $result['title'];
+    $form['body_msg']['#default_value'] = $result['body'];
+    $form['id_msg']['#value'] = $arg;
+  }
+
+  return $form;
+}
+
+/**
+ * Submits form text_message_form.
+ *
+ * Adds or updates text message.
+ *
+ * @param array $form
+ *   Array of form elements.
+ * @param array $form_state
+ *   Array of form elements.
+ */
+function text_message_submit($form, &$form_state) {
+  global $user;
+  if (isset($form_state['values']['id_msg'])) {
+    $entity = entity_load('text_msg', array($form_state['values']['id_msg']));
+    $wrapper = entity_metadata_wrapper('text_msg', $entity[$form_state['values']['id_msg']]);
+    $wrapper->title = check_plain($form_state['values']['title_msg']);
+    $wrapper->body = check_plain($form_state['values']['body_msg']);
+    $wrapper->save();
+  }
+  else {
+    $entity = entity_create('text_msg', array(
+      'uid' => $user->uid,
+      'type' => rand(),
+      'title' => check_plain($form_state['values']['title_msg']),
+      'body' => check_plain($form_state['values']['body_msg']),
+    ));
+    entity_save('text_msg', $entity);
+  }
+  drupal_goto('training/message');
+}
+
+/**
+ * Renders Entity Example page.
+ *
+ * @return string
+ */
+function training_example_entity_callback() {
+  global $user;
+  $entity = entity_create('training_item', array(
+    'uid' => $user->uid,
+    'short_description' => rand(),
+  ));
+  entity_save('training_item', $entity);
+
+  return t('lorem ipsum');
 }
 
 /**

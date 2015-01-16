@@ -166,13 +166,80 @@ function training_menu() {
   $menu['training/form'] = array(
     'title' => 'Form Example',
     'description' => 'This page is Form Example',
-    'page callback' => 'training_example_form_callback',
+    'page callback' => 'drupal_get_form',
     'page arguments' => array('training_google_form'),
     'access callback' => TRUE,
     'file' => 'training.pages.inc',
   );
+  $menu['training/entity'] = array(
+    'title' => 'Entity Example',
+    'description' => 'This page is Entity Example',
+    'page callback' => 'training_example_entity_callback',
+    'access callback' => TRUE,
+    'file' => 'training.pages.inc',
+    'type' => MENU_CALLBACK,
+  );
+  $menu['training/message'] = array(
+    'title' => 'Text Message',
+    'description' => 'This page is Text Message page',
+    'page callback' => 'training_text_message_callback',
+    'access callback' => TRUE,
+    'file' => 'training.pages.inc',
+  );
+  $menu['training/message/add'] = array(
+    'title' => 'Add new Text Message',
+    'description' => 'Add a new Text Message',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('text_message_form'),
+    'access callback' => TRUE,
+    'file' => 'training.pages.inc',
+    'type' => MENU_LOCAL_ACTION,
+  );
+  $menu['training/message/edit/%'] = array(
+    'title' => 'Edit Text Message',
+    'description' => 'Edit current Text Message',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('text_message_form', 3),
+    'access callback' => TRUE,
+    'file' => 'training.pages.inc',
+    'type' => MENU_CALLBACK,
+  );
 
   return $menu;
+}
+
+/**
+ * Implements hook_node_grants().
+ */
+function training_node_grants($account, $op) {
+  $grants = array();
+  if ($account->uid  && $op == 'view' && user_access('access content', $account)) {
+    $grants['training_author_text_message'] = array($account->uid);
+  }
+
+  return $grants;
+}
+
+/**
+ * Implements hook_node_access_records().
+ */
+function  training_node_access_records($node) {
+  if ($node->type == 'article') {
+    $uid = _training_select_uid_from_db();
+    $grants = array();
+    foreach ($uid as $value) {
+      $grants[] = array(
+        'realm' => 'training_author_text_message',
+        'gid' => $value,
+        'grant_view' => 1,
+        'grant_update' => 0,
+        'grant_delete' => 0,
+        'priority' => 0,
+      );
+    }
+
+    return $grants;
+  }
 }
 
 /**
@@ -313,6 +380,128 @@ function training_form_user_login_block_alter(&$form, &$form_state, $form_id) {
 }
 
 /**
+ * Implements hook_field_formatter_info().
+ */
+function training_field_formatter_info() {
+  return array(
+    'text_formated' => array(
+      'lable' => t('Formated text'),
+      'field types' => array('text'),
+      'settings' => array(
+        'format' => '%s'
+      ),
+    ),
+  );
+}
+
+/**
+ * Implements hook_field_formatter_settings_form().
+ */
+function training_field_formatter_settings_form($field, $instance, $view_mode, $form, &$form_state) {
+  $display = $instance['display'][$view_mode];
+  $settings = $display['settings'];
+  $element = array();
+  if ($display['type'] == 'text_formatted') {
+    $element['format'] = array(
+      '#title' => t('Format'),
+      '#type' => 'textfield',
+      '#size' => 20,
+      '#default_value' => $settings['format'],
+      '#required' => TRUE,
+    );
+  }
+
+  return $element;
+}
+
+/**
+ * Implements hook_field_formatter_settings_summary().
+ */
+function training_field_formatter_settings_summary($field, $instance, $view_mode) {
+  $display = $instance['display'][$view_mode];
+  $settings = $display['settings'];
+  $summary = t('Use a "@format" format to display this field', array(
+    '@format' => $settings['format'],
+  ));
+
+  return $summary;
+}
+
+/**
+ * Implements hook_field_formatter_view().
+ */
+function training_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
+  $element = array();
+  $settings = $display['settings'];
+  switch ($display['type']) {
+    case 'text_formated':
+      foreach ($items as $delta => $item) {
+        $element[$delta] = array('#markup' => sprintf($settings['format'], $item['value']));
+      }
+      break;
+  }
+
+  return $element;
+}
+
+/**
+ * Implements hook_entity_info().
+ */
+function training_entity_info() {
+  $return = array(
+    'training_item' => array(
+      'label' => t('Task'),
+      'entity class' => 'Entity',
+      'controller class' => 'EntityAPIController',
+      'base table' => 'training',
+      'fieldable' => FALSE,
+      'entity keys' => array(
+        'id' => 'id',
+      ),
+      'bundle keys' => array(),
+      'bundles' => array(),
+      'load hook' => 'training_item_load',
+      'view modes' => array(),
+      'label callback' => 'entity class label',
+      'uri callback' => 'entity class uri',
+      'module' => 'training',
+      'access callback' => 'training_access',
+    ),
+    'text_msg' => array(
+      'label' => t('Text message'),
+      'entity class' => 'Entity',
+      'controller class' => 'EntityAPIController',
+      'base table' => 'text_message',
+      'fieldable' => FALSE,
+      'entity keys' => array(
+        'id' => 'id',
+      ),
+      'bundle keys' => array(),
+      'bundles' => array(),
+      'load hook' => 'text_msg_load',
+      'view modes' => array(),
+      'label callback' => 'entity class label',
+      'uri callback' => 'entity class uri',
+      'module' => 'training',
+      'access callback' => 'training_access',
+    ),
+  );
+
+  return $return;
+}
+
+/**
+ * Implements hook_entity_property_info_alter().
+ */
+function training_entity_property_info_alter(&$info) {
+  $info['training_item']['properties']['uid']['type'] = 'user';
+  $info['training_item']['properties']['uid']['setter callback'] = 'entity_property_verbatim_set';
+  $info['training_item']['properties']['uid']['setter permission'] = 'administer nodes';
+  $info['text_msg']['properties']['title']['setter callback'] = 'entity_property_verbatim_set';
+  $info['text_msg']['properties']['body']['setter callback'] = 'entity_property_verbatim_set';
+}
+
+/**
  * Check access for page Custom Access Menu Item.
  *
  * @param string $role_name
@@ -442,6 +631,27 @@ function theme_test_form_theme_function($form) {
 }
 
 /**
+ * Creates array of users id from db.
+ *
+ * Select from table text_message users id who created text message.
+ *
+ * @return array
+ *   Returns array of users id.
+ */
+function _training_select_uid_from_db() {
+  $uid = array();
+  $query = db_select('text_message', 'tm');
+  $query
+    ->fields('tm', array('uid'))
+    ->distinct();
+  $result = $query->execute()->fetchAll();
+  foreach ($result as $value) {
+    $uid[] = $value->uid;
+  }
+
+  return $uid;
+}
+/**
  * Sends a request to the rates service.
  *
  * Parses the xml data. Converts xml object properties to string,
@@ -451,17 +661,19 @@ function _training_request_rates_service() {
   $date = '';
   $array_data = array();
   $request = drupal_http_request(TRAINING_BLOCK_RATES_SERVICE);
-  $data = new SimpleXMLElement($request->data);
-  foreach ($data->Currency as $value) {
-    $array_data[] = array(
-      'CharCode' => (string) $value->CharCode,
-      'Name' => (string) $value->Name,
-      'Rate' => (string) $value->Rate,
-    );
+  if (!empty($request)) {
+    $data = new SimpleXMLElement($request->data);
+    foreach ($data->Currency as $value) {
+      $array_data[] = array(
+        'CharCode' => (string) $value->CharCode,
+        'Name' => (string) $value->Name,
+        'Rate' => (string) $value->Rate,
+      );
+    }
+    foreach ($data->attributes() as $key => $val) {
+      $date .= (string) $val;
+    }
+    variable_set('training_data_rates_service', $array_data);
+    variable_set('training_date_update_rates_service', $date);
   }
-  foreach ($data->attributes() as $key => $val) {
-    $date .= (string) $val;
-  }
-  variable_set('training_data_rates_service', $array_data);
-  variable_set('training_date_update_rates_service', $date);
 }
