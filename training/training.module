@@ -388,7 +388,7 @@ function training_field_formatter_info() {
       'lable' => t('Formated text'),
       'field types' => array('text'),
       'settings' => array(
-        'format' => '%s'
+        'format' => '%s',
       ),
     ),
   );
@@ -458,10 +458,7 @@ function training_entity_info() {
       'entity keys' => array(
         'id' => 'id',
       ),
-      'bundle keys' => array(),
-      'bundles' => array(),
       'load hook' => 'training_item_load',
-      'view modes' => array(),
       'label callback' => 'entity class label',
       'uri callback' => 'entity class uri',
       'module' => 'training',
@@ -476,10 +473,7 @@ function training_entity_info() {
       'entity keys' => array(
         'id' => 'id',
       ),
-      'bundle keys' => array(),
-      'bundles' => array(),
       'load hook' => 'text_msg_load',
-      'view modes' => array(),
       'label callback' => 'entity class label',
       'uri callback' => 'entity class uri',
       'module' => 'training',
