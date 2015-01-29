@@ -8,7 +8,7 @@
  * Implements hook_enable().
  */
 function training_enable() {
-  _training_request_rates_service();
+  _training_rates_batch();
 }
 
 /**
@@ -74,6 +74,34 @@ function training_schema() {
     ),
     'primary key' => array('id'),
   );
+  $schema['training_exchange'] = array(
+      'fields' => array(
+        'id' => array(
+          'type' => 'serial',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
+        ),
+        'char_code' => array(
+          'type' => 'varchar',
+          'length' => 10,
+          'not null' => TRUE,
+          'default' => '',
+        ),
+        'name' => array(
+                  'type' => 'varchar',
+                  'length' => 100,
+                  'not null' => TRUE,
+                  'default' => '',
+        ),
+        'rate' => array(
+                    'type' => 'varchar',
+                    'length' => 100,
+                    'not null' => TRUE,
+                    'default' => '',
+        ),
+      ),
+      'primary key' => array('id'),
+    );
 
   return $schema;
 }
