@@ -11,16 +11,31 @@
  */
 function training_js_callback() {
   global $user;
-  drupal_add_js(drupal_get_path('module', 'training') . '/js/training.js');
   $settings = array(
     'user_id' => $user->uid,
     'random_num' => rand(),
   );
-  drupal_add_js($settings, 'setting');
-
-  return t('User ID = %uid', array(
+  $output = t('User ID = %uid', array(
     '%uid' => $user->uid,
   ));
+
+  return array(
+    array(
+      '#type' => 'markup',
+      '#markup' => $output,
+    ),
+    array(
+      '#attached' => array(
+        'js' => array(
+          drupal_get_path('module', 'training') . '/js/training.js',
+          array(
+            'data' => $settings,
+            'type' => 'setting',
+          ),
+        ),
+      ),
+    ),
+  );
 }
 
 /**
@@ -30,8 +45,7 @@ function training_js_callback() {
  */
 function training_ajax_callback() {
   ctools_include('ajax');
-  $output = '';
-  $output .= ctools_ajax_text_button('Click me!', 'training/ctools/ajax/callback-text', 'Click');
+  $output = ctools_ajax_text_button('Click me!', 'training/ctools/ajax/callback-text', 'Click');
 
   return $output;
 }
@@ -65,7 +79,7 @@ function training_cleanstring_callback() {
   $output[] = ctools_cleanstring('some text', array(
     'ignore words' => 'text',
     'replacements' => array(
-      'some' => 'SomE',
+      'some' => 'Some',
     ),
   ));
   $output[] = ctools_cleanstring('некоторый текст', array(
@@ -78,14 +92,6 @@ function training_cleanstring_callback() {
 
 /**
  * Builds dynamic form.
- *
- * @param array $form
- *   Array of form elements.
- * @param array $form_state
- *   Array of form parameters.
- *
- * @return array
- *   Array of form elements.
  */
 function training_dependent_form($form, &$form_state) {
   ctools_include('dependent');
@@ -139,11 +145,6 @@ function training_dependent_form($form, &$form_state) {
 
 /**
  * Submits form training_dependent_form.
- *
- * @param array $form
- *   Array of form elements.
- * @param array $form_state
- *   Array of form elements.
  */
 function training_dependent_submit($form, &$form_state) {
   drupal_set_message(t('Here'));
@@ -171,13 +172,11 @@ function training_math_callback() {
  * @return string
  */
 function training_modal_callback() {
-  drupal_add_js(drupal_get_path('module', 'training') . '/js/training.js');
   ctools_include('modal');
   ctools_include('ajax');
   ctools_modal_add_js();
-  $output = '';
-  $output .= ctools_modal_text_button('Click me to show modal', 'training/ctools/modal/nojs/form', 'Click', 'ctools-modal-some-class');
-  drupal_add_js(array(
+  $output = ctools_modal_text_button('Click me to show modal', 'training/ctools/modal/nojs/form', 'Click', 'ctools-modal-some-class');
+  $settings = array(
     'some-class' => array(
       'modalSize' => array(
         'type' => 'fixed',
@@ -186,9 +185,25 @@ function training_modal_callback() {
       ),
       'animation' => 'fadeIn',
     ),
-  ), 'setting');
+  );
 
-  return $output;
+  return array(
+    array(
+      '#type' => 'markup',
+      '#markup' => $output,
+    ),
+    array(
+      '#attached' => array(
+        'js' => array(
+          drupal_get_path('module', 'training') . '/js/training.js',
+          array(
+            'data' => $settings,
+            'type' => 'setting',
+          ),
+        ),
+      ),
+    ),
+  );
 }
 
 /**
@@ -221,14 +236,6 @@ function training_modal_form_callback($js) {
 
 /**
  * Builds example modal form.
- *
- * @param array $form
- *   Array of form elements.
- * @param array $form_state
- *   Array of form parameters.
- *
- * @return array
- *   Array of form elements.
  */
 function training_modal_form($form, &$form_state) {
   $form = array(
@@ -243,11 +250,6 @@ function training_modal_form($form, &$form_state) {
 
 /**
  * Submits form training_modal_form.
- *
- * @param array $form
- *   Array of form elements.
- * @param array $form_state
- *   Array of form elements.
  */
 function training_modal_form_submit($form, &$form_state) {
   drupal_set_message(t('Here'));
@@ -305,12 +307,10 @@ function training_object_cache_callback() {
 function training_files_callback() {
   global $user;
   $array_id = array();
-  drupal_add_js(drupal_get_path('module', 'training') . '/js/training_files.js');
   ctools_include('modal');
   ctools_include('ajax');
   ctools_modal_add_js();
-  $output = '';
-  $output .= ctools_modal_text_button('Click me to upload file', 'training/files/nojs/load_form', 'Click', 'ctools-modal-file-load-form-class');
+  $output = ctools_modal_text_button('Click me to upload file', 'training/files/nojs/load_form', 'Click', 'ctools-modal-file-load-form-class');
   $header = array(
     array('data' => t('UID'), 'id' => 'header-uid'),
     array('data' => t('FID'), 'field' => 'fid'),
@@ -347,11 +347,9 @@ function training_files_callback() {
       );
     }
   }
-  drupal_add_js(array(
+  $settings = array(
     'user_id' => $user->uid,
     'array_id' => $array_id,
-  ), 'setting');
-  drupal_add_js(array(
     'file-load-form-class' => array(
       'modalSize' => array(
         'type' => 'fixed',
@@ -360,8 +358,7 @@ function training_files_callback() {
       ),
       'animation' => 'fadeIn',
     ),
-  ), 'setting');
-  drupal_add_css(drupal_get_path('module', 'training') . '/css/training.css');
+  );
 
   return array(
     array(
@@ -376,6 +373,20 @@ function training_files_callback() {
     array(
       '#theme' => 'pager',
       '#tags' => array('<<', '<', '', '>', '>>'),
+    ),
+    array(
+      '#attached' => array(
+        'js' => array(
+          drupal_get_path('module', 'training') . '/js/training_files.js',
+          array(
+            'data' => $settings,
+            'type' => 'setting',
+          ),
+        ),
+        'css' => array(
+          drupal_get_path('module', 'training') . '/css/training.css',
+        ),
+      ),
     ),
   );
 }
@@ -410,14 +421,6 @@ function training_load_form_callback($js) {
 
 /**
  * Builds modal form to upload files.
- *
- * @param array $form
- *   Array of form elements.
- * @param array $form_state
- *   Array of form parameters.
- *
- * @return array
- *   Array of form elements.
  */
 function training_modal_load_files_form($form, &$form_state) {
   $form = array(
@@ -440,11 +443,6 @@ function training_modal_load_files_form($form, &$form_state) {
 
 /**
  * Submits form training_modal_load_files_form.
- *
- * @param array $form
- *   Array of form elements.
- * @param array $form_state
- *   Array of form elements.
  */
 function training_modal_load_files_form_submit($form, &$form_state) {
   $file = file_load($form_state['values']['file_upload']);
@@ -508,16 +506,6 @@ function training_text_message_callback() {
 
 /**
  * Builds form to add text message.
- *
- * @param array $form
- *   Array of form elements.
- * @param array $form_state
- *   Array of form parameters.
- * @param array $arg
- *   Id text message.
- *
- * @return array
- *   Array of form elements.
  */
 function text_message_form($form, &$form_state, $arg = NULL) {
   $form = array();
@@ -559,11 +547,6 @@ function text_message_form($form, &$form_state, $arg = NULL) {
  * Submits form text_message_form.
  *
  * Adds or updates text message.
- *
- * @param array $form
- *   Array of form elements.
- * @param array $form_state
- *   Array of form elements.
  */
 function text_message_submit($form, &$form_state) {
   global $user;
@@ -604,14 +587,6 @@ function training_example_entity_callback() {
 
 /**
  * Creates example form.
- *
- * @param array $form
- *   Array of form elements.
- * @param array $form_state
- *   Array of form parameters.
- *
- * @return array
- *   Array of form elements.
  */
 function training_google_form($form, &$form_state) {
   $form = array();

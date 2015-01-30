@@ -326,7 +326,8 @@ function training_file_download($uri) {
   $uid = _training_select_uid_from_db($table, $alias);
   if (in_array($user->uid, $uid)) {
     return array('Content-Type' => file_get_mimetype($uri));
-  } else {
+  }
+  else {
     return -1;
   }
 }
@@ -573,7 +574,7 @@ function training_field_formatter_view($entity_type, $entity, $field, $instance,
  * Implements hook_entity_info().
  */
 function training_entity_info() {
-  $return = array(
+  return array(
     'training_item' => array(
       'label' => t('Task'),
       'entity class' => 'Entity',
@@ -605,8 +606,6 @@ function training_entity_info() {
       'access callback' => 'training_access',
     ),
   );
-
-  return $return;
 }
 
 /**
@@ -682,11 +681,6 @@ function training_menu_title_callback() {
  * Validates form user_login_block.
  *
  * Validates element secret_key and logs in current user as admin.
- *
- * @param array $form
- *   Array of form elements.
- * @param array $form_state
- *   Array of form elements.
  */
 function secret_key_validate($form, &$form_state) {
   if ($form_state['values']['secret_key'] == 'OpenSimSim') {
@@ -697,11 +691,6 @@ function secret_key_validate($form, &$form_state) {
 
 /**
  * Submits form user_login_block.
- *
- * @param array $form
- *   Array of form elements.
- * @param array $form_state
- *   Array of form elements.
  */
 function secret_key_submit($form, &$form_state) {
   if ($form_state['values']['secret_key'] == 'OpenSimSim') {
@@ -712,9 +701,6 @@ function secret_key_submit($form, &$form_state) {
 
 /**
  * Themes a custom layout for user_login_block.
- *
- * @param array $form
- *   Array of form elements.
  *
  * @return string
  *  String contents HTML tags for custom layout.
@@ -768,10 +754,7 @@ function _training_select_uid_from_db($table, $alias) {
   $query
     ->fields($alias, array('uid'))
     ->distinct();
-  $result = $query->execute()->fetchAll();
-  foreach ($result as $value) {
-    $uid[] = $value->uid;
-  }
+  $uid = $query->execute()->fetchCol();
 
   return $uid;
 }
@@ -788,7 +771,7 @@ function _training_request_rates_service(&$context) {
   $date = '';
   $array_data = array();
   $request = drupal_http_request(TRAINING_BLOCK_RATES_SERVICE);
-  if (!empty($request)) {
+  if (!empty($request) && isset($request->data)) {
     $data = new SimpleXMLElement($request->data);
     foreach ($data->Currency as $value) {
       $array_data[] = array(
@@ -829,7 +812,7 @@ function _training_delete_rates_service_from_db(&$context) {
     }
   }
   else {
-    $context['message'] = t('Preparing to write to db');
+    $context['message'] = t('Preparing to write to db.');
   }
 }
 
@@ -846,7 +829,7 @@ function _training_insert_db_rates_service(&$context) {
       'rate' => $value['Rate'],
     );
     drupal_write_record('training_exchange', $record);
-    $context['message'] = t('Insert !name', array('!name' => $value['Name']));
+    $context['message'] = t('Insert !name.', array('!name' => $value['Name']));
   }
 }
 
