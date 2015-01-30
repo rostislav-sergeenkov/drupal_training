@@ -808,6 +808,32 @@ function _training_request_rates_service(&$context) {
 }
 
 /**
+ * Deletes data of exchange to db.
+ *
+ * Selects data from table 'training_exchange'.
+ * Deletes records before overwriting.
+ *
+ * @param array $context
+ */
+function _training_delete_rates_service_from_db(&$context) {
+  $query = db_select('training_exchange', 'tex');
+  $query
+    ->fields('tex', array('id', 'name'));
+  $result = $query->execute()->fetchAll();
+  if (!empty($result)) {
+    foreach ($result as $value) {
+      db_delete('training_exchange')
+        ->condition('id', $value->id)
+        ->execute();
+      $context['message'] = t('Delete !name', array('!name' => $value->name));
+    }
+  }
+  else {
+    $context['message'] = t('Preparing to write to db');
+  }
+}
+
+/**
  * Inserts data of exchange to db.
  *
  * @param array $context
@@ -834,6 +860,7 @@ function _training_rates_batch() {
     'title' => t('Import rate'),
     'operations' => array(
       array('_training_request_rates_service', array()),
+      array('_training_delete_rates_service_from_db', array()),
       array('_training_insert_db_rates_service', array()),
     ),
   );
