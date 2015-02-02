@@ -75,33 +75,33 @@ function training_schema() {
     'primary key' => array('id'),
   );
   $schema['training_exchange'] = array(
-      'fields' => array(
-        'id' => array(
-          'type' => 'serial',
-          'unsigned' => TRUE,
-          'not null' => TRUE,
-        ),
-        'char_code' => array(
-          'type' => 'varchar',
-          'length' => 10,
-          'not null' => TRUE,
-          'default' => '',
-        ),
-        'name' => array(
-          'type' => 'varchar',
-          'length' => 100,
-          'not null' => TRUE,
-          'default' => '',
-        ),
-        'rate' => array(
-          'type' => 'varchar',
-          'length' => 100,
-          'not null' => TRUE,
-          'default' => '',
-        ),
+    'fields' => array(
+      'id' => array(
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
       ),
-      'primary key' => array('id'),
-    );
+      'char_code' => array(
+        'type' => 'varchar',
+        'length' => 10,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'name' => array(
+        'type' => 'varchar',
+        'length' => 100,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'rate' => array(
+        'type' => 'varchar',
+        'length' => 100,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+    ),
+    'primary key' => array('id'),
+  );
 
   return $schema;
 }
