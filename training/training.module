@@ -166,13 +166,206 @@ function training_menu() {
   $menu['training/form'] = array(
     'title' => 'Form Example',
     'description' => 'This page is Form Example',
-    'page callback' => 'training_example_form_callback',
+    'page callback' => 'drupal_get_form',
     'page arguments' => array('training_google_form'),
     'access callback' => TRUE,
     'file' => 'training.pages.inc',
   );
+  $menu['training/entity'] = array(
+    'title' => 'Entity Example',
+    'description' => 'This page is Entity Example',
+    'page callback' => 'training_example_entity_callback',
+    'access callback' => TRUE,
+    'file' => 'training.pages.inc',
+    'type' => MENU_CALLBACK,
+  );
+  $menu['training/message'] = array(
+    'title' => 'Text Message',
+    'description' => 'This page is Text Message page',
+    'page callback' => 'training_text_message_callback',
+    'access callback' => TRUE,
+    'file' => 'training.pages.inc',
+  );
+  $menu['training/message/add'] = array(
+    'title' => 'Add new Text Message',
+    'description' => 'Add a new Text Message',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('text_message_form'),
+    'access callback' => TRUE,
+    'file' => 'training.pages.inc',
+    'type' => MENU_LOCAL_ACTION,
+  );
+  $menu['training/message/edit/%'] = array(
+    'title' => 'Edit Text Message',
+    'description' => 'Edit current Text Message',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('text_message_form', 3),
+    'access callback' => TRUE,
+    'file' => 'training.pages.inc',
+    'type' => MENU_CALLBACK,
+  );
+  $menu['training/js'] = array(
+    'title' => 'Javascript',
+    'description' => 'CTools example. JS',
+    'page callback' => 'training_js_callback',
+    'access callback' => TRUE,
+    'file' => 'training.pages.inc',
+    'type' => MENU_CALLBACK,
+  );
+  $menu['training/ctools/ajax'] = array(
+    'title' => 'CTools AJAX',
+    'description' => 'CTools example. Ajax',
+    'page callback' => 'training_ajax_callback',
+    'access callback' => TRUE,
+    'file' => 'training.pages.inc',
+    'type' => MENU_CALLBACK,
+  );
+  $menu['training/ctools/ajax/callback-text'] = array(
+    'title' => 'CTools AJAX',
+    'description' => 'CTools example. Ajax text',
+    'page callback' => 'training_ajax_callback_text',
+    'access callback' => TRUE,
+    'file' => 'training.pages.inc',
+    'type' => MENU_CALLBACK,
+  );
+  $menu['training/ctools/cleanstring'] = array(
+    'title' => 'CTools cleanstring',
+    'description' => 'CTools example. Cleanstring',
+    'page callback' => 'training_cleanstring_callback',
+    'access callback' => TRUE,
+    'file' => 'training.pages.inc',
+    'type' => MENU_CALLBACK,
+  );
+  $menu['training/ctools/dependent'] = array(
+    'title' => 'CTools dependent',
+    'description' => 'CTools example. Dependent',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('training_dependent_form'),
+    'access callback' => TRUE,
+    'file' => 'training.pages.inc',
+    'type' => MENU_CALLBACK,
+  );
+  $menu['training/ctools/math'] = array(
+    'title' => 'CTools math expressions',
+    'description' => 'CTools example. Math',
+    'page callback' => 'training_math_callback',
+    'access callback' => TRUE,
+    'file' => 'training.pages.inc',
+    'type' => MENU_CALLBACK,
+  );
+  $menu['training/ctools/modal'] = array(
+    'title' => 'CTools modal',
+    'description' => 'CTools example. Modal',
+    'page callback' => 'training_modal_callback',
+    'access callback' => TRUE,
+    'file' => 'training.pages.inc',
+    'type' => MENU_CALLBACK,
+  );
+  $menu['training/ctools/modal/%ctools_js/form'] = array(
+    'title' => 'CTools modal',
+    'description' => 'CTools example. Modal form',
+    'page callback' => 'training_modal_form_callback',
+    'page arguments' => array(3),
+    'access callback' => TRUE,
+    'file' => 'training.pages.inc',
+    'type' => MENU_CALLBACK,
+  );
+  $menu['training/ctools/tabs'] = array(
+    'title' => 'CTools tabs',
+    'description' => 'CTools example. Tabs',
+    'page callback' => 'training_tabs_callback',
+    'access callback' => TRUE,
+    'file' => 'training.pages.inc',
+    'type' => MENU_CALLBACK,
+  );
+  $menu['training/ctools/object-cache'] = array(
+    'title' => 'CTools object cache',
+    'description' => 'CTools example. Object cache',
+    'page callback' => 'training_object_cache_callback',
+    'access callback' => TRUE,
+    'file' => 'training.pages.inc',
+    'type' => MENU_CALLBACK,
+  );
+  $menu['training/files'] = array(
+    'title' => 'Files Download',
+    'description' => 'This page is Files Download page',
+    'page callback' => 'training_files_callback',
+    'access callback' => TRUE,
+    'file' => 'training.pages.inc',
+  );
+  $menu['training/files/%ctools_js/load_form'] = array(
+    'title' => 'Load file',
+    'description' => 'Load files',
+    'page callback' => 'training_load_form_callback',
+    'page arguments' => array(2),
+    'access callback' => TRUE,
+    'file' => 'training.pages.inc',
+    'type' => MENU_CALLBACK,
+  );
 
   return $menu;
+}
+
+/**
+ * Implements hook_views_api().
+ */
+function training_views_api() {
+  return array(
+    'api' => 3,
+    'path' => drupal_get_path('module', 'training') . '/views',
+  );
+}
+
+/**
+ * Implements hook_file_download().
+ */
+function training_file_download($uri) {
+  global $user;
+  $table = 'file_managed';
+  $alias = 'fm';
+  $uid = _training_select_uid_from_db($table, $alias);
+  if (in_array($user->uid, $uid)) {
+    return array('Content-Type' => file_get_mimetype($uri));
+  }
+  else {
+    return -1;
+  }
+}
+
+/**
+ * Implements hook_node_grants().
+ */
+function training_node_grants($account, $op) {
+  $grants = array();
+  if ($account->uid  && $op == 'view' && user_access('access content', $account)) {
+    $grants['training_author_text_message'] = array($account->uid);
+  }
+
+  return $grants;
+}
+
+/**
+ * Implements hook_node_access_records().
+ */
+function  training_node_access_records($node) {
+  if ($node->type == 'article') {
+    $table = 'text_message';
+    $alias = 'tm';
+    $uid = _training_select_uid_from_db($table, $alias);
+    $grants = array();
+    foreach ($uid as $value) {
+      $grants[] = array(
+        'realm' => 'training_author_text_message',
+        'gid' => $value,
+        'grant_view' => 1,
+        'grant_update' => 0,
+        'grant_delete' => 0,
+        'priority' => 0,
+      );
+    }
+
+    return $grants;
+  }
 }
 
 /**
@@ -271,7 +464,7 @@ function training_cron() {
   //sets the start-up period (15 min).
   if ($default-$last_crone >= 900) {
     variable_set('last_start', REQUEST_TIME);
-    _training_request_rates_service();
+    _training_rates_batch();
   }
 }
 
@@ -310,6 +503,120 @@ function training_form_user_login_block_alter(&$form, &$form_state, $form_id) {
   $form['#attached']['css'] = array(
     drupal_get_path('module', 'training') . '/css/training.css',
   );
+}
+
+/**
+ * Implements hook_field_formatter_info().
+ */
+function training_field_formatter_info() {
+  return array(
+    'text_formated' => array(
+      'lable' => t('Formated text'),
+      'field types' => array('text'),
+      'settings' => array(
+        'format' => '%s',
+      ),
+    ),
+  );
+}
+
+/**
+ * Implements hook_field_formatter_settings_form().
+ */
+function training_field_formatter_settings_form($field, $instance, $view_mode, $form, &$form_state) {
+  $display = $instance['display'][$view_mode];
+  $settings = $display['settings'];
+  $element = array();
+  if ($display['type'] == 'text_formatted') {
+    $element['format'] = array(
+      '#title' => t('Format'),
+      '#type' => 'textfield',
+      '#size' => 20,
+      '#default_value' => $settings['format'],
+      '#required' => TRUE,
+    );
+  }
+
+  return $element;
+}
+
+/**
+ * Implements hook_field_formatter_settings_summary().
+ */
+function training_field_formatter_settings_summary($field, $instance, $view_mode) {
+  $display = $instance['display'][$view_mode];
+  $settings = $display['settings'];
+  $summary = t('Use a "@format" format to display this field', array(
+    '@format' => $settings['format'],
+  ));
+
+  return $summary;
+}
+
+/**
+ * Implements hook_field_formatter_view().
+ */
+function training_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
+  $element = array();
+  $settings = $display['settings'];
+  switch ($display['type']) {
+    case 'text_formated':
+      foreach ($items as $delta => $item) {
+        $element[$delta] = array('#markup' => sprintf($settings['format'], $item['value']));
+      }
+      break;
+  }
+
+  return $element;
+}
+
+/**
+ * Implements hook_entity_info().
+ */
+function training_entity_info() {
+  return array(
+    'training_item' => array(
+      'label' => t('Task'),
+      'entity class' => 'Entity',
+      'controller class' => 'EntityAPIController',
+      'base table' => 'training',
+      'fieldable' => FALSE,
+      'entity keys' => array(
+        'id' => 'id',
+      ),
+      'load hook' => 'training_item_load',
+      'label callback' => 'entity class label',
+      'uri callback' => 'entity class uri',
+      'module' => 'training',
+      'access callback' => 'training_access',
+    ),
+    'text_msg' => array(
+      'label' => t('Text message'),
+      'entity class' => 'Entity',
+      'controller class' => 'EntityAPIController',
+      'base table' => 'text_message',
+      'fieldable' => FALSE,
+      'entity keys' => array(
+        'id' => 'id',
+      ),
+      'load hook' => 'text_msg_load',
+      'label callback' => 'entity class label',
+      'uri callback' => 'entity class uri',
+      'module' => 'training',
+      'access callback' => 'training_access',
+    ),
+  );
+}
+
+/**
+ * Implements hook_entity_property_info_alter().
+ */
+function training_entity_property_info_alter(&$info) {
+  $info['training_item']['properties']['uid']['type'] = 'user';
+  $info['training_item']['properties']['uid']['setter callback'] = 'entity_property_verbatim_set';
+  $info['training_item']['properties']['uid']['setter permission'] = 'administer nodes';
+  $info['text_msg']['properties']['title']['setter callback'] = 'entity_property_verbatim_set';
+  $info['text_msg']['properties']['body']['setter callback'] = 'entity_property_verbatim_set';
 }
 
 /**
@@ -374,11 +681,6 @@ function training_menu_title_callback() {
  * Validates form user_login_block.
  *
  * Validates element secret_key and logs in current user as admin.
- *
- * @param array $form
- *   Array of form elements.
- * @param array $form_state
- *   Array of form elements.
  */
 function secret_key_validate($form, &$form_state) {
   if ($form_state['values']['secret_key'] == 'OpenSimSim') {
@@ -389,11 +691,6 @@ function secret_key_validate($form, &$form_state) {
 
 /**
  * Submits form user_login_block.
- *
- * @param array $form
- *   Array of form elements.
- * @param array $form_state
- *   Array of form elements.
  */
 function secret_key_submit($form, &$form_state) {
   if ($form_state['values']['secret_key'] == 'OpenSimSim') {
@@ -404,9 +701,6 @@ function secret_key_submit($form, &$form_state) {
 
 /**
  * Themes a custom layout for user_login_block.
- *
- * @param array $form
- *   Array of form elements.
  *
  * @return string
  *  String contents HTML tags for custom layout.
@@ -442,26 +736,117 @@ function theme_test_form_theme_function($form) {
 }
 
 /**
+ * Creates array of users id from db.
+ *
+ * Select from table text_message users id who created text message.
+ *
+ * @param string $table
+ *   Table name.
+ * @param string $alias
+ *   Table alias.
+ *
+ * @return array $table
+ *   Returns array of users id.
+ */
+function _training_select_uid_from_db($table, $alias) {
+  $uid = array();
+  $query = db_select($table, $alias);
+  $query
+    ->fields($alias, array('uid'))
+    ->distinct();
+  $uid = $query->execute()->fetchCol();
+
+  return $uid;
+}
+
+/**
  * Sends a request to the rates service.
  *
  * Parses the xml data. Converts xml object properties to string,
  * writes them to arrays. The resulting arrays sets in the variables.
+ *
+ * @param array $context
  */
-function _training_request_rates_service() {
+function _training_request_rates_service(&$context) {
   $date = '';
   $array_data = array();
   $request = drupal_http_request(TRAINING_BLOCK_RATES_SERVICE);
-  $data = new SimpleXMLElement($request->data);
-  foreach ($data->Currency as $value) {
-    $array_data[] = array(
-      'CharCode' => (string) $value->CharCode,
-      'Name' => (string) $value->Name,
-      'Rate' => (string) $value->Rate,
+  if (!empty($request) && isset($request->data)) {
+    $data = new SimpleXMLElement($request->data);
+    foreach ($data->Currency as $value) {
+      $array_data[] = array(
+        'CharCode' => (string) $value->CharCode,
+        'Name' => (string) $value->Name,
+        'Rate' => (string) $value->Rate,
+      );
+    }
+    foreach ($data->attributes() as $key => $val) {
+      $date .= (string) $val;
+    }
+    $context['results']['array_data'] = $array_data;
+    $context['message'] = t('Import rate');
+    variable_set('training_data_rates_service', $array_data);
+    variable_set('training_date_update_rates_service', $date);
+  }
+}
+
+/**
+ * Deletes data of exchange to db.
+ *
+ * Selects data from table 'training_exchange'.
+ * Deletes records before overwriting.
+ *
+ * @param array $context
+ */
+function _training_delete_rates_service_from_db(&$context) {
+  $query = db_select('training_exchange', 'tex');
+  $query
+    ->fields('tex', array('id', 'name'));
+  $result = $query->execute()->fetchAll();
+  if (!empty($result)) {
+    foreach ($result as $value) {
+      db_delete('training_exchange')
+        ->condition('id', $value->id)
+        ->execute();
+      $context['message'] = t('Delete !name', array('!name' => $value->name));
+    }
+  }
+  else {
+    $context['message'] = t('Preparing to write to db.');
+  }
+}
+
+/**
+ * Inserts data of exchange to db.
+ *
+ * @param array $context
+ */
+function _training_insert_db_rates_service(&$context) {
+  foreach ($context['results']['array_data'] as $value) {
+    $record = array(
+      'char_code' => $value['CharCode'],
+      'name' => $value['Name'],
+      'rate' => $value['Rate'],
     );
+    drupal_write_record('training_exchange', $record);
+    $context['message'] = t('Insert !name.', array('!name' => $value['Name']));
   }
-  foreach ($data->attributes() as $key => $val) {
-    $date .= (string) $val;
-  }
-  variable_set('training_data_rates_service', $array_data);
-  variable_set('training_date_update_rates_service', $date);
+}
+
+/**
+ * Creates batch task.
+ *
+ * Imports exchange data. Inserts them to db.
+ */
+function _training_rates_batch() {
+  $batch = array (
+    'title' => t('Import rate'),
+    'operations' => array(
+      array('_training_request_rates_service', array()),
+      array('_training_delete_rates_service_from_db', array()),
+      array('_training_insert_db_rates_service', array()),
+    ),
+  );
+  batch_set($batch);
+  batch_process();
 }

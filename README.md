@@ -8,7 +8,8 @@ This module presents various examples of work with Drupal API.
 
 REQUIREMENTS
 ------------
-No special requirements.
+This module requires the following modules:
+ * Chaos tool suite (https://www.drupal.org/project/ctools)
 
 RECOMMENDED MODULES
 -------------------

@@ -3,3 +3,12 @@
   background: rgba(102, 172, 255, 0.84);
   text-align: center;
 }
+.uid-cell {
+  visibility: collapse;
+}
+#header-uid {
+  visibility: collapse;
+}
+td.active {
+  background: none;
+}

@@ -5,28 +5,588 @@
  */
 
 /**
- * Renders example form.
+ * Renders a page Example CTools Javascript.
  *
- * @param array $arg
- *  Id of example form.
- *
- * @return array|mixed
- *   The form array.
+ * @return string
  */
-function training_example_form_callback($arg) {
-  return drupal_get_form($arg, array());
+function training_js_callback() {
+  global $user;
+  $settings = array(
+    'user_id' => $user->uid,
+    'random_num' => rand(),
+  );
+  $output = t('User ID = %uid', array(
+    '%uid' => $user->uid,
+  ));
+
+  return array(
+    array(
+      '#type' => 'markup',
+      '#markup' => $output,
+    ),
+    array(
+      '#attached' => array(
+        'js' => array(
+          drupal_get_path('module', 'training') . '/js/training.js',
+          array(
+            'data' => $settings,
+            'type' => 'setting',
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+/**
+ * Renders a page Example CTools Ajax.
+ *
+ * @return string
+ */
+function training_ajax_callback() {
+  ctools_include('ajax');
+  $output = ctools_ajax_text_button('Click me!', 'training/ctools/ajax/callback-text', 'Click');
+
+  return $output;
+}
+
+/**
+ * Renders page callback for training/ctools/ajax/callback-text.
+ */
+function training_ajax_callback_text() {
+  drupal_add_js(drupal_get_path('module', 'training') . '/js/training.js');
+  $commands = array();
+  $commands[] = array(
+    'command' => 'reload',
+    'some_param' => rand(2, 4),
+  );
+  print ajax_render($commands);
+  exit;
+}
+
+/**
+ * Renders page callback for training/ctools/cleanstring.
+ *
+ * @return string
+ */
+function training_cleanstring_callback() {
+  ctools_include('cleanstring');
+  $output = array();
+  $output[] = ctools_cleanstring('some text /ё @12-5 [test]');
+  $output[] = ctools_cleanstring('some text', array(
+    'separator' => ' ',
+  ));
+  $output[] = ctools_cleanstring('some text', array(
+    'ignore words' => 'text',
+    'replacements' => array(
+      'some' => 'Some',
+    ),
+  ));
+  $output[] = ctools_cleanstring('некоторый текст', array(
+    'transliterate' => TRUE,
+    'max length' => 15,
+  ));
+
+  return implode('<br />', $output);
+}
+
+/**
+ * Builds dynamic form.
+ */
+function training_dependent_form($form, &$form_state) {
+  ctools_include('dependent');
+  $form['radios_buttons'] = array(
+    '#type' => 'radios',
+    '#options' => array(
+      'one' => 'I',
+      'two' => 'II',
+      'three' => 'III',
+    ),
+    '#default_value' => 'two',
+  );
+  $form['dependent_on_radios_buttons'] = array(
+    '#type' => 'fieldset',
+    '#dependency' => array(
+      'radio:radios_buttons' => array(
+        'one',
+      ),
+    ),
+    '#tree' => TRUE,
+    'text' => array(
+      '#type' => 'textfield',
+      '#title' => t('Enter some text'),
+    ),
+    'another_text' => array(
+      '#type' => 'textfield',
+      '#title' => t('Enter another text'),
+    ),
+    'dependent_on_text' => array(
+      '#type' => 'fieldset',
+      '#title' => 'I depend on text',
+      '#dependency' => array(
+        'edit-dependent-on-radios-buttons-text' => array(
+          'Show me please',
+        ),
+      ),
+      'button' => array(
+        '#type' => 'button',
+        '#value' => t('Some button'),
+      ),
+    ),
+  );
+  $form['submit_dependent'] = array(
+    '#type' => 'submit',
+    '#value' => t('Submit'),
+  );
+  $form['#submit'][] = 'training_dependent_submit';
+
+  return $form;
+}
+
+/**
+ * Submits form training_dependent_form.
+ */
+function training_dependent_submit($form, &$form_state) {
+  drupal_set_message(t('Here'));
+}
+
+/**
+ * Renders page callback for training/ctools/math.
+ *
+ * @return string
+ */
+function training_math_callback() {
+  ctools_include('math-expr');
+  $expr = new ctools_math_expr();
+  $expr->evaluate('f(x, y)=x+y');
+  $result = $expr->evaluate('f(10, 20)');
+
+  return t('Result is !result', array(
+    '!result' => $result,
+  ));
+}
+
+/**
+ * Renders page callback for training/ctools/modal.
+ *
+ * @return string
+ */
+function training_modal_callback() {
+  ctools_include('modal');
+  ctools_include('ajax');
+  ctools_modal_add_js();
+  $output = ctools_modal_text_button('Click me to show modal', 'training/ctools/modal/nojs/form', 'Click', 'ctools-modal-some-class');
+  $settings = array(
+    'some-class' => array(
+      'modalSize' => array(
+        'type' => 'fixed',
+        'width' => 500,
+        'height' => 300,
+      ),
+      'animation' => 'fadeIn',
+    ),
+  );
+
+  return array(
+    array(
+      '#type' => 'markup',
+      '#markup' => $output,
+    ),
+    array(
+      '#attached' => array(
+        'js' => array(
+          drupal_get_path('module', 'training') . '/js/training.js',
+          array(
+            'data' => $settings,
+            'type' => 'setting',
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+/**
+ * Renders page callback for training/ctools/modal/%ctools_js/form.
+ *
+ * @param $js
+ *   Determines the availability java script.
+ *
+ * @return string
+ */
+function training_modal_form_callback($js) {
+  if (!$js) {
+    return drupal_get_form('training_modal_form');
+  }
+  ctools_include('modal');
+  ctools_include('ajax');
+  $form_state = array(
+    'ajax' => TRUE,
+    'title' => t('Demo AJAX form'),
+  );
+  $commands = ctools_modal_form_wrapper('training_modal_form', $form_state);
+  if (!empty($form_state['executed'])) {
+    $commands = array();
+    $commands[] = ctools_modal_command_display(t('Some title'), '<strong>Hey</strong>, we are here');
+    //$commands[] = ctools_modal_command_dismiss(); //hides modal
+  }
+  print ajax_render($commands);
+  exit;
+}
+
+/**
+ * Builds example modal form.
+ */
+function training_modal_form($form, &$form_state) {
+  $form = array(
+    'submit_modal' => array(
+      '#type' => 'submit',
+      '#value' => t('Sample button'),
+    ),
+  );
+
+  return $form;
+}
+
+/**
+ * Submits form training_modal_form.
+ */
+function training_modal_form_submit($form, &$form_state) {
+  drupal_set_message(t('Here'));
+}
+
+/**
+ * Renders page callback for training/ctools/tabs.
+ *
+ * @return string
+ */
+function training_tabs_callback() {
+  ctools_include('menu');
+  $tab_1 = array(
+    'title' => 'First tab',
+    'href' => 'training/ctools/tabs/tab1',
+  );
+  $tab_2 = array(
+    'title' => 'Second tab',
+    'href' => 'training/ctools/tabs/tab2',
+  );
+  ctools_menu_add_tab($tab_1);
+  ctools_menu_add_tab($tab_2);
+  if (arg(3) == 'tab2') {
+    return t('Tab 2 content');
+  }
+
+  return t('Tab 1 content');
+}
+
+/**
+ * Renders page callback for training/ctools/object-cache.
+ *
+ * @return string
+ */
+function training_object_cache_callback() {
+  ctools_include('object-cache');
+  $obj = new stdClass();
+  $obj->title = 'my-item';
+  $obj->data = training_menu();
+  ctools_object_cache_set('training_object', $obj->title, $obj);
+  //$obj = ctools_object_cache_get('training_object', 'my-item', TRUE);
+
+  return t('Lorem ipsum');
+}
+
+/**
+ * Renders page callback for training/files.
+ *
+ * Selects rows from table 'file_managed'. Renders tables with pager and sorting.
+ * Builds AJAX text button.
+ *
+ * @return array
+ *   Renderable array.
+ */
+function training_files_callback() {
+  global $user;
+  $array_id = array();
+  ctools_include('modal');
+  ctools_include('ajax');
+  ctools_modal_add_js();
+  $output = ctools_modal_text_button('Click me to upload file', 'training/files/nojs/load_form', 'Click', 'ctools-modal-file-load-form-class');
+  $header = array(
+    array('data' => t('UID'), 'id' => 'header-uid'),
+    array('data' => t('FID'), 'field' => 'fid'),
+    array('data' => t('Filename'), 'field' => 'filename'),
+    array('data' => t('URI'), 'field' => 'uri'),
+    array('data' => t('Status'), 'field' => 'status'),
+    array('data' => t('Download')),
+  );
+  $rows = array();
+  $query = db_select('file_managed', 'fm');
+  $query
+    ->fields('fm', array('fid','uid', 'filename', 'uri', 'status'));
+  $result = $query
+    ->extend('PagerDefault')
+    ->limit(10)
+    ->extend('TableSort')
+    ->orderByHeader($header)
+    ->execute()->fetchAll();
+  if (!empty($query)) {
+    foreach ($result as $value) {
+      $array_id[$value->fid] = $value->uid;
+      $file = file_load($value->fid);
+      $url = file_create_url($file->uri);
+      $rows[] = array(
+        'data' => array(
+          array('data' => $value->uid, 'class' => 'uid-cell'),
+          $value->fid,
+          check_plain($value->filename),
+          $value->uri,
+          $value->status,
+          l(t('Download'), $url),
+          ),
+        'id' => 'fid-cell-' . $value->fid,
+      );
+    }
+  }
+  $settings = array(
+    'user_id' => $user->uid,
+    'array_id' => $array_id,
+    'file-load-form-class' => array(
+      'modalSize' => array(
+        'type' => 'fixed',
+        'width' => 500,
+        'height' => 300,
+      ),
+      'animation' => 'fadeIn',
+    ),
+  );
+
+  return array(
+    array(
+      '#type' => 'markup',
+      '#markup' => $output,
+    ),
+    array(
+      '#theme' => 'table',
+      '#header' => $header,
+      '#rows' => $rows,
+    ),
+    array(
+      '#theme' => 'pager',
+      '#tags' => array('<<', '<', '', '>', '>>'),
+    ),
+    array(
+      '#attached' => array(
+        'js' => array(
+          drupal_get_path('module', 'training') . '/js/training_files.js',
+          array(
+            'data' => $settings,
+            'type' => 'setting',
+          ),
+        ),
+        'css' => array(
+          drupal_get_path('module', 'training') . '/css/training.css',
+        ),
+      ),
+    ),
+  );
+}
+
+/**
+ * Renders page callback for training/files/%ctools_js/load_form.
+ *
+ * @param $js
+ *   Determines the availability java script.
+ *
+ * @return string
+ */
+function training_load_form_callback($js) {
+  if (!$js) {
+    return drupal_get_form('training_modal_load_files_form');
+  }
+  ctools_include('modal');
+  ctools_include('ajax');
+  $form_state = array(
+    'ajax' => TRUE,
+    'title' => t('Upload files form'),
+  );
+  $commands = ctools_modal_form_wrapper('training_modal_load_files_form', $form_state);
+  if (!empty($form_state['executed'])) {
+    $commands = array();
+    $commands[] = ctools_ajax_command_reload();
+    $commands[] = ctools_modal_command_dismiss();
+  }
+  print ajax_render($commands);
+  exit;
+}
+
+/**
+ * Builds modal form to upload files.
+ */
+function training_modal_load_files_form($form, &$form_state) {
+  $form = array(
+    'file_upload' => array(
+      '#type' => 'managed_file',
+      '#title' => 'Upload file',
+      '#upload_location' => 'private://upload',
+      '#upload_validators' => array(
+        'file_validate_extensions' => array(),
+      ),
+    ),
+    'submit_upload' => array(
+      '#type' => 'submit',
+      '#value' => 'Submit',
+    ),
+  );
+
+  return $form;
+}
+
+/**
+ * Submits form training_modal_load_files_form.
+ */
+function training_modal_load_files_form_submit($form, &$form_state) {
+  $file = file_load($form_state['values']['file_upload']);
+  $file->status = FILE_STATUS_PERMANENT;
+  file_save($file);
+}
+
+/**
+ * Renders a page with listing of text message.
+ *
+ * Selects rows from table 'text_message'. Renders tables with pager and sorting.
+ *
+ * @return array
+ *   Renderable array.
+ */
+function training_text_message_callback() {
+  $header = array(
+    array('data' => t('Num'), 'field' => 'id'),
+    array('data' => t('Author'), 'field' => 'name'),
+    array('data' => t('Title'), 'field' => 'title'),
+    array('data' => t('Text'), 'field' => 'body'),
+    array('data' => t('Edit')),
+  );
+  $rows = array();
+  $query = db_select('text_message', 'tm');
+  $query->innerJoin('users', 'u', 'tm.uid = u.uid');
+  $query
+    ->fields('tm', array('id', 'title', 'body'))
+    ->fields('u', array('name'));
+  $result = $query
+    ->extend('PagerDefault')
+    ->limit(5)
+    ->extend('TableSort')
+    ->orderByHeader($header)
+    ->execute()->fetchAll();
+  if (!empty($query)) {
+    foreach ($result as $value) {
+      $rows[] = array(
+        $value->id,
+        $value->name,
+        check_plain($value->title),
+        check_plain($value->body),
+        l(t('Edit'), 'training/message/edit/' . $value->id),
+      );
+    }
+  }
+
+  return array(
+    array(
+      '#theme' => 'table',
+      '#header' => $header,
+      '#rows' => $rows,
+    ),
+    array(
+      '#theme' => 'pager',
+      '#quantity' => 5,
+      '#tags' => array('<<', '<', '', '>', '>>'),
+    ),
+  );
+}
+
+/**
+ * Builds form to add text message.
+ */
+function text_message_form($form, &$form_state, $arg = NULL) {
+  $form = array();
+  $form['title_msg'] = array(
+    '#type' => 'textfield',
+    '#title' => 'Title',
+    '#required' => TRUE,
+  );
+  $form['body_msg'] = array(
+    '#type' => 'textarea',
+    '#title' => 'Text',
+    '#required' => TRUE,
+  );
+  $form['id_msg'] = array(
+    '#type' => 'hidden',
+    '#value' => NULL,
+  );
+  $form['submit_msg'] = array(
+    '#type' => 'submit',
+    '#value' => t('Send'),
+  );
+  $form['#submit'][] = 'text_message_submit';
+
+  if (isset($arg)) {
+    $query = db_select('text_message', 'tm');
+    $query
+      ->fields('tm', array('title', 'body'))
+      ->condition('tm.id', $arg);
+    $result = $query->execute()->fetchAssoc();
+    $form['title_msg']['#default_value'] = $result['title'];
+    $form['body_msg']['#default_value'] = $result['body'];
+    $form['id_msg']['#value'] = $arg;
+  }
+
+  return $form;
+}
+
+/**
+ * Submits form text_message_form.
+ *
+ * Adds or updates text message.
+ */
+function text_message_submit($form, &$form_state) {
+  global $user;
+  if (isset($form_state['values']['id_msg'])) {
+    $entity = entity_load('text_msg', array($form_state['values']['id_msg']));
+    $wrapper = entity_metadata_wrapper('text_msg', $entity[$form_state['values']['id_msg']]);
+    $wrapper->title = check_plain($form_state['values']['title_msg']);
+    $wrapper->body = check_plain($form_state['values']['body_msg']);
+    $wrapper->save();
+  }
+  else {
+    $entity = entity_create('text_msg', array(
+      'uid' => $user->uid,
+      'type' => rand(),
+      'title' => check_plain($form_state['values']['title_msg']),
+      'body' => check_plain($form_state['values']['body_msg']),
+    ));
+    entity_save('text_msg', $entity);
+  }
+  drupal_goto('training/message');
+}
+
+/**
+ * Renders Entity Example page.
+ *
+ * @return string
+ */
+function training_example_entity_callback() {
+  global $user;
+  $entity = entity_create('training_item', array(
+    'uid' => $user->uid,
+    'short_description' => rand(),
+  ));
+  entity_save('training_item', $entity);
+
+  return t('lorem ipsum');
 }
 
 /**
  * Creates example form.
- *
- * @param array $form
- *   Array of form elements.
- * @param array $form_state
- *   Array of form parameters.
- *
- * @return array
- *   Array of form elements.
  */
 function training_google_form($form, &$form_state) {
   $form = array();
