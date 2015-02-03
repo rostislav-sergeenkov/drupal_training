@@ -302,6 +302,37 @@ function training_menu() {
     'file' => 'training.pages.inc',
     'type' => MENU_CALLBACK,
   );
+  $menu['training/i18n'] = array(
+    'title' => 'Internationalisation sandbox',
+    'description' => 'Page demonstrates example for localisation in Drupal',
+    'page callback' => 'training_i18n_callback',
+    'access callback' => TRUE,
+    'file' => 'training.pages.inc',
+  );
+  $menu['training/dates'] = array(
+    'title' => 'Dates sandbox',
+    'description' => 'Page demonstrates example for dates in Drupal',
+    'page callback' => 'training_dates_callback',
+    'access callback' => TRUE,
+    'file' => 'training.pages.inc',
+  );
+  $menu['training/dates/%ctools_js/form'] = array(
+    'title' => 'Show date',
+    'description' => 'Shows date of users registration',
+    'page callback' => 'training_dates_form_callback',
+    'page arguments' => array(2),
+    'access callback' => TRUE,
+    'file' => 'training.pages.inc',
+    'type' => MENU_CALLBACK,
+  );
+  $menu['training/security'] = array(
+    'title' => 'Security sandbox',
+    'description' => 'Page demonstrates example for security in Drupal',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('training_security_form'),
+    'access arguments' => array('access content'),
+    'file' => 'training.pages.inc',
+  );
 
   return $menu;
 }

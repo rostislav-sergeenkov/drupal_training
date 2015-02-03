@@ -5,9 +5,150 @@
  */
 
 /**
+ * Builds form that demonstrates example security in Drupal.
+ */
+function training_security_form($form, &$form_state) {
+  $form['markup_security'] = array(
+    '#prefix' => '<div id = "training-security-text">',
+    '#suffix' => '</div>',
+    '#markup' => '',
+    '#tree' => TRUE,
+  );
+  $form['markup_security']['text_security'] = array(
+      '#type' => 'textarea',
+      '#title' => t('Secure text'),
+  );
+  $form['markup_security']['submit_security'] = array(
+    '#type' => 'submit',
+    '#value' => t('Submit'),
+    '#ajax' => array(
+      'callback' => 'training_security_display_text',
+      'wrapper' => 'training-security-text',
+      'method' => 'replace',
+      'effect' => 'fade',
+    ),
+  );
+
+  return $form;
+}
+
+/**
+ * Displays text after ajax submit for training_security_form.
+ */
+function training_security_display_text($form, &$form_state) {
+  $output = check_plain($form_state['values']['markup_security']['text_security']);
+  $form['markup_security']['#markup'] = $output;
+
+  return $form['markup_security'];
+}
+
+/**
+ * Renders page callback for training/dates.
+ *
+ * @return array
+ */
+function training_dates_callback() {
+  ctools_include('modal');
+  ctools_include('ajax');
+  ctools_modal_add_js();
+  $output = ctools_modal_text_button('Click me to show date', 'training/dates/nojs/form', 'Click', 'ctools-modal-date-class');
+  $settings = array(
+    'date-class' => array(
+      'modalSize' => array(
+        'type' => 'fixed',
+        'width' => 300,
+        'height' => 300,
+      ),
+      'animation' => 'fadeIn',
+    ),
+  );
+
+  return array(
+    array(
+      '#type' => 'markup',
+      '#markup' => $output,
+    ),
+    array(
+      '#attached' => array(
+        'js' => array(
+          array(
+            'data' => $settings,
+            'type' => 'setting',
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+/**
+ * Renders page callback for training/dates/%ctools_js/form.
+ *
+ * @param $js
+ *   Determines the availability java script.
+ *
+ * @return array
+ *   Returns renderable array if parameter does not exist.
+ */
+function training_dates_form_callback($js) {
+  global $user;
+  $date = new DateObject($user->created);
+  $date_now = date_now($user->timezone);
+  $end_date = new DateObject('31 Dec 2015');
+  $duration = $date_now->difference($end_date, 'days');
+  $output = array(
+    t('Date of registration !name:', array('!name' => $user->name)),
+    date_format_date($date, 'custom', 'd F Y'),
+    t('Left until the new year'),
+    format_plural($duration, '1 day', '@count days'),
+  );
+  if (!$js) {
+    return array(
+      array(
+        '#type' => 'markup',
+        '#markup' => implode('<br />', $output),
+      ),
+    );
+  }
+  ctools_include('modal');
+  ctools_include('ajax');
+  $commands[] = ctools_modal_command_display(t('Date'), implode('<br />', $output));
+  print ajax_render($commands);
+  exit;
+}
+
+/**
+ * Renders page callback for training/i18n.
+ *
+ * @return array
+ */
+function training_i18n_callback() {
+  $output = array(
+    t('Some text.'),
+    t('Some text with !token.', array('!token' => 5)),
+    l(t('Home'), t('<front>')),
+    format_plural(rand(1,100), '1 task', '@count tasks'),
+  );
+
+  return array(
+    array(
+      '#type' => 'markup',
+      '#markup' => implode('<br />', $output),
+    ),
+    array(
+      '#attached' => array(
+        'js' => array(
+          drupal_get_path('module', 'training') . '/js/training_i18n.js',
+        ),
+      ),
+    ),
+  );
+}
+
+/**
  * Renders a page Example CTools Javascript.
  *
- * @return string
+ * @return array
  */
 function training_js_callback() {
   global $user;

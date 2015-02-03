@@ -8,7 +8,7 @@
  * Implements hook_enable().
  */
 function training_enable() {
-  _training_rates_batch();
+ // _training_rates_batch();
 }
 
 /**
