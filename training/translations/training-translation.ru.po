@@ -24,4 +24,3 @@ msgstr[1] "@count дня"
 msgstr[2] "@count[2] дней"
 msgid "Left until the new year"
 msgstr "До нового года осталось"
-
