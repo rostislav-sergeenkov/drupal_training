@@ -92,16 +92,25 @@ function training_dates_callback() {
  */
 function training_dates_form_callback($js) {
   global $user;
-  $date = new DateObject($user->created);
   $date_now = date_now($user->timezone);
   $end_date = new DateObject('31 Dec 2015');
   $duration = $date_now->difference($end_date, 'days');
-  $output = array(
-    t('Date of registration !name:', array('!name' => $user->name)),
-    date_format_date($date, 'custom', 'd F Y'),
-    t('Left until the new year'),
-    format_plural($duration, '1 day', '@count days'),
-  );
+  if (in_array('anonymous user', $user->roles)) {
+    $output = array(
+      t('You are not registered user.'),
+      t('Left until the new year'),
+      format_plural($duration, '1 day', '@count days'),
+    );
+  }
+  else {
+    $date = new DateObject($user->created);
+    $output = array(
+      t('Date of registration !name:', array('!name' => $user->name)),
+      date_format_date($date, 'custom', 'd F Y'),
+      t('Left until the new year'),
+      format_plural($duration, '1 day', '@count days'),
+    );
+  }
   if (!$js) {
     return array(
       array(

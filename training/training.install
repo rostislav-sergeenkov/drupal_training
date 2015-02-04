@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * File install for the training module.
+ * Install, update, and uninstall functions for the training module.
  */
 
 /**
