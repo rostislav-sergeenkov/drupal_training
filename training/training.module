@@ -333,8 +333,53 @@ function training_menu() {
     'access arguments' => array('access content'),
     'file' => 'training.pages.inc',
   );
+  $menu['training/token'] = array(
+    'title' => 'Token sandbox',
+    'description' => 'Page demonstrates example for tokens in Drupal',
+    'page callback' => 'training_token_callback',
+    'access arguments' => array('access content'),
+    'file' => 'training.pages.inc',
+  );
+  $menu['training/rules'] = array(
+    'title' => 'Rules sandbox',
+    'description' => 'Page demonstrates example for rules in Drupal',
+    'page callback' => 'training_rules_callback',
+    'access arguments' => array('access content'),
+    'file' => 'training.pages.inc',
+  );
+  $menu['training/performance'] = array(
+    'title' => 'Performance',
+    'description' => 'Page demonstrates example for performance in Drupal',
+    'page callback' => 'training_performance_callback',
+    'access arguments' => array('access content'),
+    'file' => 'training.pages.inc',
+  );
+  $menu['training/services'] = array(
+    'title' => 'Services',
+    'description' => 'Page demonstrates example for services in Drupal',
+    'page callback' => 'training_services_callback',
+    'access arguments' => array('access content'),
+    'file' => 'training.pages.inc',
+  );
+  $menu['training/lottery'] = array(
+    'title' => 'Lottery',
+    'description' => 'Page of some lottery',
+    'page callback' => 'training_lottery_callback',
+    'access arguments' => array('access content'),
+    'file' => 'training.pages.inc',
+  );
 
   return $menu;
+}
+
+/**
+ * Implements hook_flush_caches().
+ */
+function training_flush_caches() {
+  return array(
+    'cache_training_performance',
+    'cache_training_lottery',
+  );
 }
 
 /**
@@ -345,6 +390,16 @@ function training_views_api() {
     'api' => 3,
     'path' => drupal_get_path('module', 'training') . '/views',
   );
+}
+
+/**
+ * Implements hook_mail().
+ */
+function training_mail($key, &$message, $params) {
+  $pattern = 'The current training id is [current_training:id]';
+  $pattern_processed = token_replace($pattern);
+  $message['title'] = t('Test');
+  $message['body'][] = $pattern_processed;
 }
 
 /**
@@ -425,6 +480,18 @@ function training_block_info() {
     'info' => t('Exchange'),
     'cache' => DRUPAL_CACHE_GLOBAL,
   );
+  $blocks['tr_no_cache'] = array(
+    'info' => t('Training: No cache'),
+    'cache' => DRUPAL_NO_CACHE,
+  );
+  $blocks['tr_cache_per_role'] = array(
+    'info' => t('Training: Per role'),
+    'cache' => DRUPAL_CACHE_PER_ROLE,
+  );
+  $blocks['lottery'] = array(
+    'info' => t('Lottery number'),
+    'cache' => DRUPAL_NO_CACHE,
+  );
 
   return $blocks;
 }
@@ -433,6 +500,14 @@ function training_block_info() {
  * Implements hook_block_view().
  */
 function training_block_view($delta = '') {
+  global $user;
+  $obj_lottery = cache_get('cache_for_message_' . $user->uid, 'cache_training_lottery');
+  if ($obj_lottery && isset($obj_lottery->data->lottery_num)) {
+    $messages = implode('</br>', $obj_lottery->data->lottery_num);
+  }
+  else {
+    $messages = t('Sorry, you have not won anything yet :(');
+  }
   $date = variable_get('training_date_update_rates_service', array());
   $data = variable_get('training_data_rates_service', array());
   $rows = array();
@@ -450,6 +525,21 @@ function training_block_view($delta = '') {
     $block['subject'] = t('Title block');
     $block['content'] = t('Обновлено %date', array('%date' => $date)) .
       theme('table', array('rows' => $rows));
+  }
+  if ($delta == 'tr_no_cache') {
+    $block['subject'] = t('No cache');
+    $block['content'] = array(
+      '#theme' => 'training_render_stub',
+      '#type' => 'tr_no_cache',
+    );
+  }
+  if ($delta == 'tr_cache_per_role') {
+    $block['subject'] = t('Cache per role');
+    $block['content'] = t('test') . rand(1, 100);
+  }
+  if ($delta == 'lottery') {
+    $block['subject'] = t('Oooh, You win in following lottery!');
+    $block['content'] = $messages;
   }
 
   return $block;
@@ -507,6 +597,9 @@ function training_theme() {
   $theme['test_form_theme_function'] = array(
     'render element' => 'form',
     'arguments' => array('form' => NULL),
+  );
+  $theme['training_render_stub'] = array(
+    'variables' => array('type' => NULL),
   );
 
   return $theme;
@@ -651,6 +744,33 @@ function training_entity_property_info_alter(&$info) {
 }
 
 /**
+ * Implements hook_xmlrpc().
+ */
+function training_xmlrpc() {
+  $methods[] = array(
+    'training_services.test',
+    '_training_services_test',
+    array(
+      'int', //return type
+      'int',
+      'string',
+    ),
+    t('Returns some test data.'),
+  );
+  $methods[] = array(
+    'training_services.lottery',
+    '_training_services_lottery',
+    array(
+      'string', //return type
+      'int',
+    ),
+    t('Returns lottery code.'),
+  );
+
+  return $methods;
+}
+
+/**
  * Check access for page Custom Access Menu Item.
  *
  * @param string $role_name
@@ -767,6 +887,15 @@ function theme_test_form_theme_function($form) {
 }
 
 /**
+ * Themes a custom layout for tr_no_cache and tr_cache_per_role blocks.
+ */
+function theme_training_render_stub($variables) {
+  $output = $variables['type'] . ':' . rand(1, 100);
+
+  return $output;
+}
+
+/**
  * Creates array of users id from db.
  *
  * Select from table text_message users id who created text message.
@@ -880,4 +1009,82 @@ function _training_rates_batch() {
   );
   batch_set($batch);
   batch_process();
+}
+
+/**
+ * Loads data based on user id.
+ *
+ * @param $uid
+ *   User ID.
+ *
+ * @return array
+ */
+function _training_performance_load_data($uid) {
+  $cache = &drupal_static(__FUNCTION__, NULL);
+  if (!isset($cache[$uid])) {
+    if (!isset($cache['select'])) {
+      $cache['select'] = db_select('node', 'n')->fields('n');
+    }
+    $select = clone $cache['select'];
+    $select->condition('uid', $uid);
+    $cache[$uid] = $select->execute()->fetchAllAssoc('nid');
+  }
+
+  return $cache[$uid];
+}
+
+/**
+ * Returns some test data.
+ *
+ * XML-RPC callback for training_services.test.
+ *
+ * @param int $arg1
+ * @param string $arg2
+ *
+ * @return int
+ */
+function _training_services_test($arg1, $arg2) {
+  if ($arg1 == '10000') {
+    return xmlrpc_error(10000, t('Invalid argument'));
+  }
+
+  return $arg1 * $arg2;
+}
+
+/**
+ * Checks some conditions for generate success code.
+ *
+ * @return string
+ */
+function _training_lottery_generator_success() {
+    $server = url($GLOBALS['base_url'] . '/xmlrpc.php', array('external' => TRUE));
+  $options = array(
+    'training_services.lottery' => array(
+      rand(1, 2),
+    ),
+  );
+  $success = xmlrpc($server, $options);
+
+  return $success;
+}
+
+/**
+ * Returns success code for lottery.
+ *
+ * XML-RPC callback for training_services.lottery.
+ *
+ * @param int $arg1
+ *   Random integer.
+ * @param int $arg2
+ *   Random integer.
+ *
+ * @return string
+ */
+function _training_services_lottery($arg1) {
+  $arg2 = rand(1, 2);
+  if ($arg1 == $arg2) {
+    return 'success';
+  }
+
+  return 'no success';
 }

@@ -5,6 +5,139 @@
  */
 
 /**
+ * Renders page callback for training/lottery.
+ *
+ * @return array
+ */
+function training_lottery_callback() {
+  rules_invoke_event('lottery');
+  $output = 'Anyone can win in our lottery! Please Welcome!';
+
+  return array(
+    array(
+      '#type' => 'markup',
+      '#markup' => $output,
+    ),
+  );
+}
+
+/**
+ * Renders page callback for training/services.
+ *
+ * @return array
+ */
+function training_services_callback() {
+  $server = url($GLOBALS['base_url'] . '/xmlrpc.php', array('external' => TRUE));
+  $options = array(
+    'training_services.test' => array(
+      1,
+      '2',
+    ),
+  );
+  $results = xmlrpc($server, $options);
+
+  return array(
+    array(
+      '#type' => 'markup',
+      '#markup' => $results,
+    ),
+  );
+}
+
+/**
+ * Renders page callback for training/performance.
+ *
+ * @return array
+ */
+function training_performance_callback() {
+  global $user;
+  $obj = new stdClass();
+  $obj->some_var = rand(1, 500);
+  $cid = 'cache_for_user_' . $user->uid;
+  cache_set($cid, $obj, 'cache_training_performance', CACHE_PERMANENT);
+  //cache_clear_all($cid, 'cache_training_performance');
+  dpm(cache_get($cid, 'cache_training_performance'));
+  $output = 'Test cache!' . rand(1, 500);
+
+  return array(
+    array(
+      '#type' => 'markup',
+      '#markup' => $output,
+    ),
+  );
+}
+
+/**
+ * Renders page callback for training/rules.
+ *
+ * @return array
+ */
+function training_rules_callback() {
+  rules_invoke_event('training_event');
+  $output = 'Do event!';
+
+  return array(
+    array(
+      '#type' => 'markup',
+      '#markup' => $output,
+    ),
+  );
+}
+
+/**
+ * Renders page callback for training/token.
+ *
+ * @return array
+ */
+function training_token_callback() {
+ global $user;
+  $task_object = (object) array(
+    'id' => 1,
+    'uid' => 1,
+    'name' => '<b>Admin</b>',
+  );
+  $data = array(
+    'task' => $task_object,
+    'user' => $user,
+  );
+  $pattern = 'Some text [task:uid:name] of [user:name].';
+  $output = token_replace($pattern, $data);
+  //$output .= drupal_get_form('training_token_form');
+  drupal_mail('training', 'some_key_' . $user->uid, 'admin@example.com', language_default());
+
+  return array(
+    array(
+      '#type' => 'markup',
+      '#markup' => $output,
+    ),
+  );
+}
+
+/**
+ * Builds form that just return textarea.
+ */
+function training_token_form($form, &$form_state) {
+  $form['test_tokens'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Test autocomplete capabilities'),
+    '#autocomplete_path' => 'token/autocomplete/task',
+  );
+  $form['token_tree'] = array(
+    '#theme' => 'token_tree',
+    '#variables' => array(
+      'test' => TRUE
+    ),
+    '#dialog' => TRUE,
+    '#global_types' => FALSE,
+    '#token_types' => array(
+      'user'
+    ),
+  );
+
+  return $form;
+}
+
+/**
  * Builds form that demonstrates example security in Drupal.
  */
 function training_security_form($form, &$form_state) {
@@ -95,7 +228,7 @@ function training_dates_form_callback($js) {
   $date_now = date_now($user->timezone);
   $end_date = new DateObject('31 Dec 2015');
   $duration = $date_now->difference($end_date, 'days');
-  if (in_array('anonymous user', $user->roles)) {
+  if (user_is_anonymous()) {
     $output = array(
       t('You are not registered user.'),
       t('Left until the new year'),
