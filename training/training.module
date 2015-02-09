@@ -304,14 +304,14 @@ function training_menu() {
   );
   $menu['training/i18n'] = array(
     'title' => 'Internationalisation sandbox',
-    'description' => 'Page demonstrates example for localisation in Drupal',
+    'description' => 'Page demonstrates example of localisation in Drupal',
     'page callback' => 'training_i18n_callback',
     'access callback' => TRUE,
     'file' => 'training.pages.inc',
   );
   $menu['training/dates'] = array(
     'title' => 'Dates sandbox',
-    'description' => 'Page demonstrates example for dates in Drupal',
+    'description' => 'Page demonstrates example of dates in Drupal',
     'page callback' => 'training_dates_callback',
     'access callback' => TRUE,
     'file' => 'training.pages.inc',
@@ -327,7 +327,7 @@ function training_menu() {
   );
   $menu['training/security'] = array(
     'title' => 'Security sandbox',
-    'description' => 'Page demonstrates example for security in Drupal',
+    'description' => 'Page demonstrates example of security in Drupal',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('training_security_form'),
     'access arguments' => array('access content'),
@@ -335,28 +335,28 @@ function training_menu() {
   );
   $menu['training/token'] = array(
     'title' => 'Token sandbox',
-    'description' => 'Page demonstrates example for tokens in Drupal',
+    'description' => 'Page demonstrates example of tokens in Drupal',
     'page callback' => 'training_token_callback',
     'access arguments' => array('access content'),
     'file' => 'training.pages.inc',
   );
   $menu['training/rules'] = array(
     'title' => 'Rules sandbox',
-    'description' => 'Page demonstrates example for rules in Drupal',
+    'description' => 'Page demonstrates example of rules in Drupal',
     'page callback' => 'training_rules_callback',
     'access arguments' => array('access content'),
     'file' => 'training.pages.inc',
   );
   $menu['training/performance'] = array(
     'title' => 'Performance',
-    'description' => 'Page demonstrates example for performance in Drupal',
+    'description' => 'Page demonstrates example of performance in Drupal',
     'page callback' => 'training_performance_callback',
     'access arguments' => array('access content'),
     'file' => 'training.pages.inc',
   );
   $menu['training/services'] = array(
     'title' => 'Services',
-    'description' => 'Page demonstrates example for services in Drupal',
+    'description' => 'Page demonstrates example of services in Drupal',
     'page callback' => 'training_services_callback',
     'access arguments' => array('access content'),
     'file' => 'training.pages.inc',
@@ -751,7 +751,8 @@ function training_xmlrpc() {
     'training_services.test',
     '_training_services_test',
     array(
-      'int', //return type
+      //return type
+      'int',
       'int',
       'string',
     ),
@@ -761,7 +762,7 @@ function training_xmlrpc() {
     'training_services.lottery',
     '_training_services_lottery',
     array(
-      'string', //return type
+      'string',
       'int',
     ),
     t('Returns lottery code.'),
@@ -1057,7 +1058,7 @@ function _training_services_test($arg1, $arg2) {
  * @return string
  */
 function _training_lottery_generator_success() {
-    $server = url($GLOBALS['base_url'] . '/xmlrpc.php', array('external' => TRUE));
+  $server = url($GLOBALS['base_url'] . '/xmlrpc.php', array('external' => TRUE));
   $options = array(
     'training_services.lottery' => array(
       rand(1, 2),

@@ -125,12 +125,12 @@ function training_token_form($form, &$form_state) {
   $form['token_tree'] = array(
     '#theme' => 'token_tree',
     '#variables' => array(
-      'test' => TRUE
+      'test' => TRUE,
     ),
     '#dialog' => TRUE,
     '#global_types' => FALSE,
     '#token_types' => array(
-      'user'
+      'user',
     ),
   );
 
@@ -218,7 +218,7 @@ function training_dates_callback() {
  * Renders page callback for training/dates/%ctools_js/form.
  *
  * @param $js
- *   Determines the availability java script.
+ *   Determines the availability JS.
  *
  * @return array
  *   Returns renderable array if parameter does not exist.
@@ -493,7 +493,7 @@ function training_modal_callback() {
  * Renders page callback for training/ctools/modal/%ctools_js/form.
  *
  * @param $js
- *   Determines the availability java script.
+ *   Determines the availability JS.
  *
  * @return string
  */
@@ -678,7 +678,7 @@ function training_files_callback() {
  * Renders page callback for training/files/%ctools_js/load_form.
  *
  * @param $js
- *   Determines the availability java script.
+ *   Determines the availability JS.
  *
  * @return string
  */
