@@ -1,14 +1,14 @@
 <?php
 /**
  * @file
- * File install for the training module.
+ * Install, update, and uninstall functions for the training module.
  */
 
 /**
  * Implements hook_enable().
  */
 function training_enable() {
-  _training_rates_batch();
+ // _training_rates_batch();
 }
 
 /**
@@ -17,6 +17,12 @@ function training_enable() {
 function training_disable() {
   variable_del('training_data_rates_service');
   variable_del('training_date_update_rates_service');
+  $uid = _training_select_uid_from_db('users', 'u');
+  foreach ($uid as $value) {
+    if (!is_null(variable_get('training_lottery_message' . $value, NULL))) {
+      variable_del('training_lottery_message' . $value);
+    }
+  }
 }
 
 /**
@@ -102,6 +108,10 @@ function training_schema() {
     ),
     'primary key' => array('id'),
   );
+  $schema['cache_training_performance'] = drupal_get_schema_unprocessed('system', 'cache');
+  $schema['cache_training_performance']['description'] = 'Example for performance';
+  $schema['cache_training_lottery'] = drupal_get_schema_unprocessed('system', 'cache');
+  $schema['cache_training_lottery']['description'] = 'Cache for lottery message';
 
   return $schema;
 }
